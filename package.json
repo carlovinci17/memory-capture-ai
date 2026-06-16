@@ -1,0 +1,53 @@
+{
+  "name": "memory-capture-ai",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Memory Capture AI — a living memory journal that interviews storytellers and captures their words as memory cards.",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
+    "typecheck": "tsc -b --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "start": "concurrently -k -n api,web -c magenta,green \"npm:start:api\" \"npm:start:web\"",
+    "start:api": "cd api && npm run build && func start --port 7071",
+    "start:web": "swa start",
+    "dev:api": "cd api && npm start"
+  },
+  "dependencies": {
+    "microsoft-cognitiveservices-speech-sdk": "^1.41.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@azure/static-web-apps-cli": "^2.0.2",
+    "@testing-library/jest-dom": "^6.4.8",
+    "concurrently": "^9.0.1",
+    "@testing-library/react": "^16.0.1",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-jsx-a11y": "^6.9.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-refresh": "^0.4.11",
+    "jest-axe": "^9.0.0",
+    "jsdom": "^25.0.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.8"
+  }
+}

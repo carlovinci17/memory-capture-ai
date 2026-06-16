@@ -1,0 +1,28 @@
+{
+  "name": "memory-capture-ai-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Azure Functions API for Memory Capture AI — Azure AI Foundry orchestration (keys stay server-side).",
+  "main": "dist/src/functions/*.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "clean": "rm -rf dist",
+    "prestart": "npm run clean && npm run build",
+    "start": "func start",
+    "test": "vitest run",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@azure/cosmos": "^4.1.1",
+    "@azure/functions": "^4.5.1",
+    "@azure/storage-blob": "^12.25.0",
+    "openai": "^4.67.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.10",
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.2"
+  }
+}

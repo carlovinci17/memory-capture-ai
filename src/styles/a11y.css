@@ -1,0 +1,100 @@
+/* a11y.css — WCAG 2.1 AA affordances layered on the approved design system.
+ * Loaded after the ported CSS so these opt-in modes win. Toggled by data
+ * attributes on <html> (see src/lib/a11y/useA11ySettings.ts). */
+
+/* ---------- High-contrast theme ---------- *
+ * The warm palette is light; --ink-3/--ink-4 fall below AA for body text.
+ * High-contrast darkens inks + strengthens lines/surfaces to clear AA. */
+[data-contrast='high'] {
+  --ink: #160F08;
+  --ink-2: #2C2316;
+  --ink-3: #463A2B;
+  --ink-4: #5C4F3C;
+  --line: rgba(20, 14, 8, 0.38);
+  --line-2: rgba(20, 14, 8, 0.24);
+  --bg: #FBF7EF;
+  --bg-deep: #F2EADC;
+  --surface: #FFFFFF;
+  --surface-2: #FBF6EC;
+  --accent-ink: #6E2E13;
+  --bloom-opacity: 0.7;
+}
+[data-contrast='high'] .btn--primary {
+  box-shadow: none;
+  border-color: var(--accent-ink);
+}
+[data-contrast='high'] :focus-visible {
+  outline-width: 3px;
+}
+
+/* ---------- Larger-text mode ---------- *
+ * The design uses px sizing throughout, so we scale the whole UI (text + hit
+ * targets) with zoom — also helps low-dexterity users. */
+[data-textsize='large'] body {
+  zoom: 1.15;
+}
+
+/* ---------- Minimum 44x44 hit targets (WCAG 2.5.5) ---------- */
+.iv__micbtn,
+.iv__send,
+.iv__end,
+.iv__interviewer-btn,
+.nav__item,
+.chip {
+  min-height: 44px;
+}
+.iv__micbtn,
+.iv__send {
+  min-width: 44px;
+}
+
+/* ---------- Skip link ---------- */
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -48px;
+  z-index: 1000;
+  padding: 10px 16px;
+  border-radius: 0 0 10px 10px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  transition: top 0.15s;
+}
+.skip-link:focus {
+  top: 0;
+}
+
+/* ---------- Accessibility menu (sidebar) ---------- */
+.a11y {
+  padding: 0 8px 8px;
+}
+.a11y__menu {
+  margin: 6px 4px 0;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.a11y__opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: var(--r-sm);
+  font-size: 13.5px;
+  color: var(--ink-2);
+  min-height: 40px;
+}
+.a11y__opt:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.a11y__opt.is-on {
+  color: var(--accent-ink);
+  font-weight: 600;
+}
