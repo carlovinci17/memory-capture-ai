@@ -6,19 +6,27 @@ export default async function handler(): Promise<Response> {
   const region = process.env.AZURE_SPEECH_REGION;
 
   if (!key || !region) {
-    return new Response(JSON.stringify({ error: 'speech_disabled' }), {
+    return new Response(JSON.stringify({ error: 'speech_disabled', key: !!key, region: !!region }), {
       status: 503,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), 8000);
+
   try {
     const res = await fetch(
       `https://${region}.api.cognitive.microsoft.com/sts/v1.0/issueToken`,
-      { method: 'POST', headers: { 'Ocp-Apim-Subscription-Key': key, 'Content-Length': '0' } },
+      {
+        method: 'POST',
+        headers: { 'Ocp-Apim-Subscription-Key': key, 'Content-Length': '0' },
+        signal: ac.signal,
+      },
     );
+    clearTimeout(timer);
     if (!res.ok) {
-      return new Response(JSON.stringify({ error: 'upstream_error' }), {
+      return new Response(JSON.stringify({ error: 'upstream_error', status: res.status, region }), {
         status: 502,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -31,8 +39,9 @@ export default async function handler(): Promise<Response> {
         'Cache-Control': 'private, max-age=480',
       },
     });
-  } catch {
-    return new Response(JSON.stringify({ error: 'upstream_error' }), {
+  } catch (err) {
+    clearTimeout(timer);
+    return new Response(JSON.stringify({ error: 'upstream_error', detail: String(err), region }), {
       status: 502,
       headers: { 'Content-Type': 'application/json' },
     });
