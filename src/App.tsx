@@ -13,6 +13,8 @@ import { ProfilesScreen } from './screens/ProfilesScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { MemoryScreen } from './screens/MemoryScreen';
 import { SummaryScreen } from './screens/SummaryScreen';
+import { AdminScreen } from './screens/AdminScreen';
+import { PrivacyScreen } from './screens/PrivacyScreen';
 import type { StorytellerProfile } from './lib/domain/types';
 
 function meta(pathname: string, profile: StorytellerProfile): { eyebrow: string; title: string } {
@@ -95,6 +97,7 @@ export default function App() {
       />
       <Route path="/onboarding" element={<OnboardingScreen />} />
       <Route path="/edit" element={<OnboardingScreen editing />} />
+      <Route path="/admin" element={<AdminScreen />} />
 
       <Route element={<AppLayout />}>
         <Route path="/home" element={<HomeRoute />} />
@@ -103,6 +106,7 @@ export default function App() {
         <Route path="/profiles" element={<ProfilesScreen />} />
         <Route path="/profiles/:id" element={<ProfileRoute />} />
         <Route path="/memories/:memId" element={<MemoryRoute />} />
+        <Route path="/privacy" element={<PrivacyScreen />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/home" replace />} />

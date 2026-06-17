@@ -61,6 +61,11 @@ function writeRaw(store: Store): void {
   }
 }
 
+/** Write an entire Store directly — used to seed demo data on first visit. */
+export function seedLocalStore(store: Store): void {
+  writeRaw(store);
+}
+
 export class LocalProfileRepository implements ProfileRepository {
   async load(): Promise<Store> {
     return readRaw();

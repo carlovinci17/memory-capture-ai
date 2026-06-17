@@ -52,6 +52,14 @@ export function Sidebar() {
 
       <div className="sidebar__spacer" />
       <A11yMenu />
+      <NavLink
+        to="/privacy"
+        className={({ isActive }) => 'nav__item' + (isActive ? ' is-active' : '')}
+        style={{ margin: '0 8px 4px' }}
+      >
+        <Icon name="info" className="nav__icon" />
+        <span>Privacy & AI</span>
+      </NavLink>
       <button
         className="nav__item"
         onClick={() => void onReset()}

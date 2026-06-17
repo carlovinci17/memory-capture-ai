@@ -17,7 +17,7 @@ export function ProfileScreen({ profile }: { profile: StorytellerProfile }) {
 
   const confirmDelete = async () => {
     if (
-      window.confirm('Delete this profile and everything you’ve captured? This can’t be undone.')
+      window.confirm("Delete this profile and everything you've captured? This can't be undone.")
     ) {
       const next = await deleteProfile(profile.id);
       navigate(next ? `/profiles/${next}` : '/onboarding');
@@ -135,9 +135,6 @@ export function ProfileScreen({ profile }: { profile: StorytellerProfile }) {
               <div className="persona-row__name">{persona.name}</div>
               <div className="persona-row__blurb">{persona.blurb}</div>
             </div>
-          </div>
-          <div className="rail__empty" style={{ textAlign: 'left', marginTop: 8 }}>
-            “{persona.sample}”
           </div>
           <button className="btn btn--ghost" style={{ marginTop: 16 }} onClick={() => navigate('/edit')}>
             <Icon name="arrow" size={15} /> Change interviewer

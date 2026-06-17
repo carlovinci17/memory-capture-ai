@@ -10,6 +10,9 @@ import {
   type ReactNode,
 } from 'react';
 import { getRepository, type NewProfile } from '../db';
+import { seedLocalStore } from '../db/localRepository';
+import { isDemoMode } from '../demo/demoMode';
+import { getDemoStore } from '../demo/demoData';
 import type { Memory, SessionResult, Store, StorytellerProfile } from '../domain/types';
 
 interface StoreContextValue {
@@ -53,10 +56,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     repo
       .load()
       .then((s) => {
-        if (alive) {
+        if (!alive) return;
+        if (isDemoMode() && s.profiles.length === 0) {
+          // First visit in demo mode — seed Eleanor Mitchell so the app
+          // looks populated from the start (no onboarding required).
+          const seeded = getDemoStore();
+          seedLocalStore(seeded);
+          setStore(seeded);
+        } else {
           setStore(s);
-          setReady(true);
         }
+        setReady(true);
       })
       .catch(() => {
         if (alive) {

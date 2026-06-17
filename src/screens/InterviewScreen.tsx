@@ -20,6 +20,7 @@ import {
   stopSpeaking,
   type Recognition,
 } from '../lib/speech/speechService';
+import { isDemoMode, DEMO_SESSION_KEY, DEMO_SESSION_LIMIT } from '../lib/demo/demoMode';
 import type {
   ExtractedEntity,
   Memory,
@@ -240,7 +241,7 @@ const MODES: { id: Mode; label: string; icon: IconName; sub: string }[] = [
 
 export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   const navigate = useNavigate();
-  const { changePersona, finishSession, updateMemory } = useStore();
+  const { changePersona, finishSession, updateMemory, resetAll } = useStore();
   const engine = useMemo(() => getInterviewEngine(), []);
   const persona = getPersona(profile.personaId);
 
@@ -705,6 +706,10 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   const begin = async () => {
     // Ref guard prevents a second concurrent call before React re-renders the disabled button.
     if (beginInProgressRef.current) return;
+    if (isDemoMode()) {
+      const count = parseInt(localStorage.getItem(DEMO_SESSION_KEY) ?? '0', 10);
+      localStorage.setItem(DEMO_SESSION_KEY, String(count + 1));
+    }
     beginInProgressRef.current = true;
     setAiSpeaking(true);
     const idx = messages.map((m) => m.who).lastIndexOf('ai');
@@ -722,6 +727,12 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
     if (!mountedRef.current) return;
     setAiSpeaking(false);
   };
+
+  // Demo mode session gate — visitors get DEMO_SESSION_LIMIT full sessions.
+  const demoSessionCount = isDemoMode()
+    ? parseInt(localStorage.getItem(DEMO_SESSION_KEY) ?? '0', 10)
+    : 0;
+  const overLimit = isDemoMode() && demoSessionCount >= DEMO_SESSION_LIMIT;
 
   // Fresh interview: opening question shown but nothing answered yet.
   const notStarted = (messages.length <= 1) && turns === 0;
@@ -775,6 +786,33 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
     : `${first}'s answer — speak or type…`;
 
   const newest = memories[memories.length - 1];
+
+  if (overLimit) {
+    return (
+      <div className="page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+        <div className="panel rise" style={{ maxWidth: 520, textAlign: 'center', padding: '40px 44px' }}>
+          <div style={{ fontSize: 34, marginBottom: 16 }}>✦</div>
+          <h2 className="display" style={{ fontSize: 26, marginBottom: 12 }}>
+            You've explored the full demo
+          </h2>
+          <p style={{ color: 'var(--ink-2)', lineHeight: 1.6, marginBottom: 28 }}>
+            You've completed {DEMO_SESSION_LIMIT} interview sessions in this demo.
+            Reset to start fresh and experience it again from the beginning.
+          </p>
+          <button
+            className="btn btn--primary"
+            onClick={async () => {
+              localStorage.removeItem(DEMO_SESSION_KEY);
+              await resetAll();
+              window.location.reload();
+            }}
+          >
+            <Icon name="spark" size={16} /> Reset demo
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="iv">

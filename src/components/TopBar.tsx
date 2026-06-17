@@ -1,9 +1,10 @@
 // TopBar.tsx — screen title + profile switcher dropdown (switch / view / add).
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from './Icon';
 import { Avatar } from './Avatar';
 import { useStore } from '../lib/store/StoreProvider';
+import { isDemoMode } from '../lib/demo/demoMode';
 import type { StorytellerProfile } from '../lib/domain/types';
 
 interface TopBarProps {
@@ -37,6 +38,16 @@ export function TopBar({ eyebrow, title, profile }: TopBarProps) {
   };
 
   return (
+    <>
+    {isDemoMode() && (
+      <div className="demo-banner">
+        <span className="demo-banner__label">Portfolio Demo</span>
+        <span className="demo-banner__note">
+          Your data stays on this device only · AI processing via Azure (Microsoft)
+          {' · '}<Link to="/privacy" className="demo-banner__link">How this works</Link>
+        </span>
+      </div>
+    )}
     <div className="topbar">
       <div>
         <div className="topbar__eyebrow">{eyebrow}</div>
@@ -114,5 +125,6 @@ export function TopBar({ eyebrow, title, profile }: TopBarProps) {
         </>
       )}
     </div>
+    </>
   );
 }

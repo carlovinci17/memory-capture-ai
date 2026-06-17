@@ -394,3 +394,43 @@ body {
 .painting-indicator__dot { animation: dotFade 1.4s ease-in-out infinite; font-style: normal; }
 .painting-indicator__dot:nth-child(3) { animation-delay: .25s; }
 .painting-indicator__dot:nth-child(4) { animation-delay: .5s; }
+
+/* ============================================================
+   Demo Mode banner + Admin screen
+   ============================================================ */
+.demo-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 24px;
+  background: linear-gradient(90deg,
+    color-mix(in oklab, var(--bloom-a) 28%, var(--surface-2)),
+    color-mix(in oklab, var(--bloom-c) 14%, var(--surface-2))
+  );
+  border-bottom: 1px solid color-mix(in oklab, var(--accent) 18%, var(--line));
+  gap: 16px;
+}
+.demo-banner__label {
+  font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent-ink); flex: none;
+}
+.demo-banner__note {
+  font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis;
+}
+.demo-banner__link {
+  color: var(--ink-3); text-decoration: underline; text-underline-offset: 2px;
+}
+.demo-banner__link:hover { color: var(--ink-2); }
+
+.mode-badge {
+  display: inline-flex; align-items: center; padding: 3px 10px;
+  border-radius: 99px; font-size: 10.5px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; flex: none;
+}
+.mode-badge--demo {
+  background: color-mix(in oklab, var(--bloom-a) 22%, var(--surface-3));
+  color: var(--ink-2);
+}
+.mode-badge--production {
+  background: color-mix(in oklab, var(--accent) 16%, var(--surface-3));
+  color: var(--accent-ink);
+}

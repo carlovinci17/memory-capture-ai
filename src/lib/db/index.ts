@@ -1,25 +1,20 @@
-// db/index.ts — repository factory. Swaps implementations by config without
-// touching screen code. Cosmos/Table implementations are added in M8.
+// db/index.ts — repository factory. Runtime mode (demo vs production) is read
+// from localStorage so the admin panel can switch it without a rebuild.
 import type { ProfileRepository } from './repository';
 import { LocalProfileRepository } from './localRepository';
 import { ApiProfileRepository } from './apiRepository';
+import { getRuntimeMode } from '../demo/demoMode';
 
 let instance: ProfileRepository | null = null;
 
 export function getRepository(): ProfileRepository {
   if (instance) return instance;
-
-  const provider = import.meta.env.VITE_AUTH_PROVIDER ?? 'guest';
-  switch (provider) {
-    case 'swa':
-      // Cloud mode — profiles persist in Cosmos via the /api Functions.
-      instance = new ApiProfileRepository();
-      break;
-    case 'guest':
-    default:
-      // Guest/local mode — fully offline, no cloud dependencies.
-      instance = new LocalProfileRepository();
-      break;
+  if (getRuntimeMode() === 'production') {
+    // Production mode — profiles persist in Cosmos via the /api Functions.
+    instance = new ApiProfileRepository();
+  } else {
+    // Demo mode (default) — fully local, no cloud storage.
+    instance = new LocalProfileRepository();
   }
   return instance;
 }
