@@ -36,10 +36,17 @@ describe('Interview loop (Manual mode)', () => {
     await user.click(screen.getByRole('tab', { name: /manual/i }));
 
     const compose = await screen.findByLabelText(/Ask Eleanor a question/i);
-    await user.type(compose, 'Where were you born?{Enter}');
+    await user.type(compose, 'Where were you born?');
+    await user.keyboard('{Enter}');
 
-    const answerField = await screen.findByLabelText(/Eleanor's answer/i);
-    await user.type(answerField, 'I was born in Camogli in 1948.{Enter}');
+    // Wait for the phase to switch to answer (turn indicator confirms it).
+    await waitFor(() =>
+      expect(screen.getByText(/Eleanor is answering/i)).toBeInTheDocument(),
+    );
+
+    const answerField = screen.getByLabelText(/Eleanor's answer/i);
+    await user.type(answerField, 'I was born in Camogli in 1948.');
+    await user.keyboard('{Enter}');
 
     // A memory card forms in the rail.
     await waitFor(() => expect(screen.getByText(/Newest memory card/i)).toBeInTheDocument());

@@ -34,7 +34,7 @@ export default async function handler(req, res) {
   });
 
   if (!token || typeof token === 'object') {
-    return res.status(502).json({ error: 'upstream_error', region, ...token });
+    return res.status(502).json({ error: 'upstream_error' });
   }
 
   res.setHeader('Cache-Control', 'private, max-age=480');
