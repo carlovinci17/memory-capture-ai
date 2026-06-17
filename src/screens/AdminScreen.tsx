@@ -31,7 +31,19 @@ export function AdminScreen() {
     }
   };
 
-  const switchTo = (mode: 'demo' | 'production') => {
+  const switchTo = async (mode: 'demo' | 'production') => {
+    if (mode === 'production') {
+      try {
+        const r = await fetch('/.auth/me');
+        const d = (await r.json()) as { clientPrincipal?: unknown };
+        if (!d?.clientPrincipal) {
+          window.location.href = '/.auth/login/github?post_login_redirect_uri=/admin';
+          return;
+        }
+      } catch {
+        // /.auth/me unreachable on local dev — skip check
+      }
+    }
     setRuntimeMode(mode);
     window.location.reload();
   };
@@ -134,7 +146,7 @@ export function AdminScreen() {
                 {currentMode === 'demo' ? (
                   <button
                     className="btn btn--primary"
-                    onClick={() => switchTo('production')}
+                    onClick={() => void switchTo('production')}
                     style={{ width: '100%' }}
                   >
                     <Icon name="arrow" size={15} /> Switch to Production
@@ -142,7 +154,7 @@ export function AdminScreen() {
                 ) : (
                   <button
                     className="btn btn--ghost"
-                    onClick={() => switchTo('demo')}
+                    onClick={() => void switchTo('demo')}
                     style={{ width: '100%' }}
                   >
                     Switch to Demo mode
