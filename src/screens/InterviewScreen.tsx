@@ -939,7 +939,7 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
           ) : null}
         </div>
 
-        <div className="iv__transcript" ref={scrollRef} aria-live="polite" aria-label="Transcript">
+        <div className="iv__transcript" role="log" ref={scrollRef} aria-live="polite" aria-label="Transcript">
           {messages.map((b, i) => (
             <div key={i} className={'bubble bubble--' + b.who}>
               <div className="bubble__who">

@@ -56,6 +56,7 @@ describe('request validation', () => {
       era: '1967',
       theme: 'Home',
       excerpt: 'the boats were coming in',
+      summary: 'Giovanni watched the boats come in at Camogli harbour.',
       people: [{ text: 'Giovanni', relation: 'Father' }],
       places: ['Camogli'],
       years: ['1967'],
