@@ -248,7 +248,7 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   const first = firstNameOf(profile.name);
 
   const [messages, setMessages] = useState<Bubble[]>([]);
-  const [openingReady, setOpeningReady] = useState(false);
+  const [topicOptions, setTopicOptions] = useState<{ topic: string; questions: string[] }[] | null>(null);
   const [memories, setMemories] = useState<Memory[]>([]);
   const [noticed, setNoticed] = useState<ExtractedEntity[]>([]);
   const [text, setText] = useState('');
@@ -288,8 +288,6 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   const pivotAtRef = useRef(randomBetween(3, 6));
   // Silence-based auto-submit: fires after 2.5 s of no new speech segments.
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Guards Begin against same-frame double-press (ref updates synchronously, state does not).
-  const beginInProgressRef = useRef(false);
   // Synchronous paused flag so the TTS effect can check it without needing it in deps.
   const pausedRef = useRef(false);
   // Per-topic accumulation: one memory card is created per topic and updated as
@@ -297,9 +295,8 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   const currentTopicMemoryIdRef = useRef<string | null>(null);
   const currentTopicAnswersRef = useRef<string[]>([]);
   const currentTopicFirstQRef = useRef<string | undefined>(undefined);
-  // Mirrors ttsOn state synchronously so stale closures (e.g. aiFollowUp captured
-  // before begin() re-rendered with ttsOn=true) read the current value via the ref
-  // rather than a frozen closure snapshot.
+  // Mirrors ttsOn state synchronously so stale closures read the current value via
+  // the ref rather than a frozen closure snapshot.
   const ttsOnRef = useRef(false);
   const clearSilenceTimer = () => {
     if (silenceTimerRef.current) {
@@ -338,37 +335,14 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
     };
   }, []);
 
-  // Generate the opening question on mount. A random angle is chosen each time
-  // so the first question varies meaningfully across sessions.
+  // On mount, pick 2 random distinct topics for the user to choose from.
+  // This avoids the AI producing a follow-up-style opening question.
   useEffect(() => {
-    const OPENING_ANGLES = [
-      'Ask about a vivid scene from their childhood — what they could see, hear, or smell in that moment.',
-      'Ask about someone who shaped who they are — a parent, grandparent, teacher, or old friend.',
-      'Ask about a place that felt like home and what made it feel that way.',
-      'Ask about a tradition, ritual, or yearly event that defined family life for them.',
-      'Ask about a turning point — a moment when everything changed and life took a new direction.',
-      'Ask about a skill, hobby, or passion they had when they were young and how it came about.',
-      'Ask about a challenge they once faced and what they discovered within themselves to get through it.',
-      'Ask about a simple everyday joy from a particular chapter of their life — not a big occasion, just a small pleasure.',
-      'Ask about a piece of wisdom passed down to them — something a person they loved used to say or do.',
-      'Ask about a relationship that mattered deeply — how it began and what it came to mean.',
-      'Ask what a typical day looked like for them during a specific era of their life.',
-      'Ask about a first experience — a first job, a first home, a first big adventure.',
-    ];
-    const openingAngle = OPENING_ANGLES[Math.floor(Math.random() * OPENING_ANGLES.length)];
-
-    let alive = true;
-    const priorMemories = (profile.memories ?? []).map((m) => ({
-      title: m.title,
-      summary: m.summary,
-      excerpt: m.excerpt,
-    }));
-    void engine.nextQuestion({ profile, persona, transcript: [], priorMemories, openingAngle }).then((q) => {
-      if (!alive) return;
-      setMessages([{ who: 'ai', text: q }]);
-      setOpeningReady(true);
-    });
-    return () => { alive = false; };
+    const pool = [...LIFE_TOPIC_POOL];
+    const i1 = Math.floor(Math.random() * pool.length);
+    const [t1] = pool.splice(i1, 1);
+    const i2 = Math.floor(Math.random() * pool.length);
+    setTopicOptions([t1, pool[i2]]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -380,8 +354,8 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
     if (!ttsOn) stopSpeaking();
   }, [ttsOn]);
 
-  // Read each new AI question aloud when read-aloud is on, then (for a natural
-  // flow) auto-start the mic so the storyteller can answer hands-free.
+  // Read each new AI question aloud when read-aloud is on, then auto-start the mic
+  // so the storyteller can answer immediately without pressing anything.
   useEffect(() => {
     if (!ttsOn || pausedRef.current) return;
     const idx = messages.length - 1;
@@ -391,7 +365,9 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
       void (async () => {
         setAiSpeaking(true);
         await speak(last.text, persona.voice);
-        if (mountedRef.current) setAiSpeaking(false);
+        if (!mountedRef.current) return;
+        setAiSpeaking(false);
+        if (modeRef.current === 'ai' && !pausedRef.current) void startListening();
       })();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -700,32 +676,27 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
     setPickerOpen(false);
   };
 
-  // Begin the interview: read the opening question aloud (this click is the
-  // user gesture browsers require for audio) and, with read-aloud, hand the mic
-  // over so the storyteller can simply answer.
-  const begin = async () => {
-    // Ref guard prevents a second concurrent call before React re-renders the disabled button.
-    if (beginInProgressRef.current) return;
+  // User selects a conversation topic from the picker — reads the opening question
+  // aloud (satisfying the browser audio-gesture requirement) then starts the mic.
+  const selectTopic = async (idx: number) => {
+    if (!topicOptions) return;
+    const t = topicOptions[idx];
+    const q = t.questions[0];
+    setTopicOptions(null);
+    setMessages([{ who: 'ai', text: q }]);
     if (isDemoMode()) {
       const count = parseInt(localStorage.getItem(DEMO_SESSION_KEY) ?? '0', 10);
       localStorage.setItem(DEMO_SESSION_KEY, String(count + 1));
     }
-    beginInProgressRef.current = true;
-    setAiSpeaking(true);
-    const idx = messages.map((m) => m.who).lastIndexOf('ai');
-    const lastAi = idx >= 0 ? messages[idx] : null;
-    if (!lastAi) {
-      beginInProgressRef.current = false;
-      if (mountedRef.current) setAiSpeaking(false);
-      return;
-    }
+    if (!voiceAvailable) return;
     setTtsOn(true);
-    ttsOnRef.current = true; // update ref immediately so stale closures see TTS as on
-    lastSpokeRef.current = idx; // prevent the read-aloud effect from double-speaking
-    await speak(lastAi.text, persona.voice);
-    beginInProgressRef.current = false;
+    ttsOnRef.current = true;
+    lastSpokeRef.current = 0; // prevent TTS effect from re-speaking this message
+    setAiSpeaking(true);
+    await speak(q, persona.voice);
     if (!mountedRef.current) return;
     setAiSpeaking(false);
+    void startListening();
   };
 
   // Demo mode session gate — visitors get DEMO_SESSION_LIMIT full sessions.
@@ -733,9 +704,6 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
     ? parseInt(localStorage.getItem(DEMO_SESSION_KEY) ?? '0', 10)
     : 0;
   const overLimit = isDemoMode() && demoSessionCount >= DEMO_SESSION_LIMIT;
-
-  // Fresh interview: opening question shown but nothing answered yet.
-  const notStarted = (messages.length <= 1) && turns === 0;
 
   const pauseSession = () => {
     stopSpeaking();
@@ -771,6 +739,7 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   };
 
   const askingNow = mode !== 'ai' && phase === 'question';
+  const interviewStarted = messages.length > 0 && !topicOptions;
   const statusText = paused
     ? 'Paused'
     : thinking
@@ -917,16 +886,24 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
             ))}
           </div>
           <div className="iv__mode-sub">{MODES.find((m) => m.id === mode)?.sub}</div>
-          {voiceAvailable && mode !== 'manual' && notStarted ? (
-            <button
-              className="btn btn--primary"
-              onClick={() => void begin()}
-              disabled={aiSpeaking || !openingReady}
-              style={{ marginTop: 14 }}
-            >
-              <Icon name="play" size={16} /> {openingReady ? 'Begin — read the question aloud' : 'Preparing your session…'}
-            </button>
-          ) : voiceAvailable && mode !== 'manual' ? (
+          {topicOptions ? (
+            <div className="iv__topic-picker">
+              <div className="iv__topic-label">Choose a topic to begin</div>
+              <div className="iv__topic-cards">
+                {topicOptions.map((t, i) => (
+                  <button
+                    key={t.topic}
+                    className="iv__topic-card"
+                    onClick={() => void selectTopic(i)}
+                    disabled={aiSpeaking}
+                  >
+                    <span className="iv__topic-name">{t.topic}</span>
+                    <span className="iv__topic-q">{t.questions[0]}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : voiceAvailable && mode !== 'manual' && interviewStarted ? (
             <button
               className="chip"
               aria-pressed={ttsOn}

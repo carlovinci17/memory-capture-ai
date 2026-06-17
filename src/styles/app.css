@@ -299,7 +299,7 @@ body {
   display: flex; flex-direction: column;
 }
 .mcard:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
-.mcard__art { position: relative; height: 148px; overflow: hidden; }
+.mcard__art { position: relative; aspect-ratio: 1; width: 100%; overflow: hidden; }
 .mcard__art .wc-art { position: absolute; inset: 0; }
 .mcard__art::before {
   content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;

@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { WatercolorDefs } from '../components/Watercolor';
 import { Icon } from '../components/Icon';
 import { isDemoMode, setRuntimeMode, verifyAdminPassword } from '../lib/demo/demoMode';
 
 export function AdminScreen() {
+  const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
@@ -161,6 +163,16 @@ export function AdminScreen() {
               </p>
             </div>
           )}
+
+          <div style={{ marginTop: 20, borderTop: '1px solid var(--line, #e5e5e5)', paddingTop: 16 }}>
+            <button
+              className="btn btn--ghost"
+              onClick={() => navigate('/home')}
+              style={{ width: '100%' }}
+            >
+              <Icon name="arrow" size={15} style={{ transform: 'rotate(180deg)' }} /> Back to app
+            </button>
+          </div>
         </div>
       </div>
     </div>

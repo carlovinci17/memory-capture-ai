@@ -7,7 +7,7 @@ module.exports = {
     'plugin:react-hooks/recommended',
     'plugin:jsx-a11y/recommended',
   ],
-  ignorePatterns: ['dist', '.eslintrc.cjs', 'design_handoff_mvp', 'api/dist'],
+  ignorePatterns: ['dist', '.eslintrc.cjs', 'design_handoff_mvp', 'api/dist', 'api/speech'],
   parser: '@typescript-eslint/parser',
   plugins: ['react-refresh', 'jsx-a11y'],
   rules: {
