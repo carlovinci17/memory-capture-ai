@@ -57,7 +57,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       .load()
       .then((s) => {
         if (!alive) return;
-        if (isDemoMode() && s.profiles.length === 0) {
+        if (isDemoMode() && s.profiles.length === 0 && import.meta.env.MODE !== 'test') {
           // First visit in demo mode — seed Eleanor Mitchell so the app
           // looks populated from the start (no onboarding required).
           const seeded = getDemoStore();
