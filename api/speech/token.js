@@ -24,7 +24,7 @@ export default async function handler(req, res) {
         let body = '';
         response.on('data', (chunk) => { body += chunk; });
         response.on('end', () => {
-          resolve(response.statusCode === 200 ? body : null);
+          resolve(response.statusCode === 200 ? body : { status: response.statusCode, body });
         });
       },
     );
@@ -33,8 +33,8 @@ export default async function handler(req, res) {
     r.end();
   });
 
-  if (!token) {
-    return res.status(502).json({ error: 'upstream_error', region });
+  if (!token || typeof token === 'object') {
+    return res.status(502).json({ error: 'upstream_error', region, ...token });
   }
 
   res.setHeader('Cache-Control', 'private, max-age=480');
