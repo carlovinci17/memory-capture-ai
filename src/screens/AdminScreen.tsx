@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { WatercolorDefs } from '../components/Watercolor';
 import { Icon } from '../components/Icon';
 import { isDemoMode, setRuntimeMode, verifyAdminPassword } from '../lib/demo/demoMode';
@@ -9,6 +9,9 @@ export function AdminScreen() {
   const [unlocked, setUnlocked] = useState(false);
   const [error, setError] = useState(false);
   const [checking, setChecking] = useState(false);
+
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { inputRef.current?.focus(); }, []);
 
   const currentMode = isDemoMode() ? 'demo' : 'production';
 
@@ -57,6 +60,7 @@ export function AdminScreen() {
                 </label>
                 <div style={{ position: 'relative' }}>
                   <input
+                    ref={inputRef}
                     id="admin-pw"
                     type={showPassword ? 'text' : 'password'}
                     className="ob-input"
@@ -67,7 +71,6 @@ export function AdminScreen() {
                     value={password}
                     onChange={(e) => { setPassword(e.target.value); setError(false); }}
                     placeholder="Enter admin password"
-                    autoFocus
                     autoComplete="current-password"
                   />
                   <button

@@ -272,7 +272,6 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
                       if (e.key === 'Escape') { setAddingYear(false); setYearInput(''); }
                     }}
                     placeholder="e.g. 1975 or 1970s"
-                    autoFocus
                   />
                   <button className="chip" onClick={() => void saveYear()} style={{ padding: '2px 10px' }}>Save</button>
                   <button className="chip" onClick={() => { setAddingYear(false); setYearInput(''); }} style={{ padding: '2px 8px' }}>✕</button>
@@ -307,7 +306,6 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
                     onChange={(e) => setPersonNameInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Escape') { setAddingPerson(false); setPersonNameInput(''); setPersonRelInput(''); } }}
                     placeholder="Name"
-                    autoFocus
                   />
                   <input
                     className="mem__add-input"
@@ -353,7 +351,6 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
                       if (e.key === 'Escape') { setAddingPlace(false); setPlaceInput(''); }
                     }}
                     placeholder="e.g. Melbourne"
-                    autoFocus
                   />
                   <button className="chip" onClick={() => void savePlace()} style={{ padding: '2px 10px' }}>Save</button>
                   <button className="chip" onClick={() => { setAddingPlace(false); setPlaceInput(''); }} style={{ padding: '2px 8px' }}>✕</button>
