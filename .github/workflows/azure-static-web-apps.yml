@@ -21,13 +21,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version-file: .nvmrc
+          node-version: '24'
           cache: npm
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+        env:
+          VITE_ADMIN_PASSWORD_HASH: ${{ secrets.VITE_ADMIN_PASSWORD_HASH }}
+          VITE_AI_MODE: azure
+          VITE_AUTH_PROVIDER: guest
       # API quality gates (deployed as the SWA managed API)
       - run: npm ci --prefix api
       - run: npm run build --prefix api
@@ -42,6 +46,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
       - name: Build And Deploy
         uses: Azure/static-web-apps-deploy@v1
         with:
@@ -51,6 +59,10 @@ jobs:
           app_location: '/'
           api_location: 'api'
           output_location: 'dist'
+        env:
+          VITE_ADMIN_PASSWORD_HASH: ${{ secrets.VITE_ADMIN_PASSWORD_HASH }}
+          VITE_AI_MODE: azure
+          VITE_AUTH_PROVIDER: guest
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
