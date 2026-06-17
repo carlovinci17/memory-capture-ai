@@ -2,9 +2,9 @@
 // Mints a short-lived Azure AI Speech token so the browser SDK can do
 // STT/TTS without the key ever reaching the browser.
 // Env vars: AZURE_SPEECH_KEY, AZURE_SPEECH_REGION (set in Vercel dashboard).
-const https = require('https');
+import https from 'https';
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   const key = process.env.AZURE_SPEECH_KEY;
   const region = process.env.AZURE_SPEECH_REGION;
 
@@ -39,4 +39,4 @@ module.exports = async function handler(req, res) {
 
   res.setHeader('Cache-Control', 'private, max-age=480');
   return res.status(200).json({ token, region });
-};
+}
