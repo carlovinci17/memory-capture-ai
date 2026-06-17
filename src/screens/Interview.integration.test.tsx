@@ -36,19 +36,16 @@ describe('Interview loop (Manual mode)', () => {
     await user.click(screen.getByRole('tab', { name: /manual/i }));
 
     const compose = await screen.findByLabelText(/Ask Eleanor a question/i);
-    await user.type(compose, ‘Where were you born?{Enter}’);
+    await user.type(compose, 'Where were you born?{Enter}');
 
-    // DEBUG: log the DOM state after question submit to diagnose aria-label issue
-    screen.debug(undefined, 99999);
-
-    const answerField = await screen.findByLabelText(/Eleanor’s answer/i);
+    const answerField = await screen.findByLabelText(/Eleanor's answer/i);
     await user.type(answerField, 'I was born in Camogli in 1948.{Enter}');
 
     // A memory card forms in the rail.
     await waitFor(() => expect(screen.getByText(/Newest memory card/i)).toBeInTheDocument());
     expect(screen.getByText(/1 this session/i)).toBeInTheDocument();
 
-    // End the session → the summary reflects the captured memory.
+    // End the session and the summary reflects the captured memory.
     await user.click(screen.getByRole('button', { name: /^end$/i }));
     await waitFor(() =>
       expect(screen.getByRole('heading', { name: /beautifully done/i })).toBeInTheDocument(),
