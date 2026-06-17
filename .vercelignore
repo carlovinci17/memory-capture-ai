@@ -1,2 +1,5 @@
-# Azure Functions API — not deployed to Vercel (runs on Azure Static Web Apps)
+# Azure Functions API runs on Azure Static Web Apps, not Vercel.
+# Exclude everything in api/ EXCEPT the Vercel-compatible speech token function.
 api/
+!api/speech/
+!api/speech/token.ts
