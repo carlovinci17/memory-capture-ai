@@ -35,9 +35,18 @@ async function parseJsonOrThrow<T>(res: Response, label: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+async function apiError(res: Response, label: string): Promise<Error> {
+  let detail = '';
+  try {
+    const body = (await res.clone().json()) as { message?: string; error?: string };
+    detail = body.message || body.error || '';
+  } catch { /* body is not JSON */ }
+  return new Error(`${label} (${res.status})${detail ? ': ' + detail : ''}`);
+}
+
 async function listProfiles(): Promise<StorytellerProfile[]> {
   const res = await fetch(`${BASE}/profiles`);
-  if (!res.ok) throw new Error(`Failed to load profiles (${res.status})`);
+  if (!res.ok) throw await apiError(res, 'Failed to load profiles');
   const data = await parseJsonOrThrow<{ profiles: StorytellerProfile[] }>(res, 'Load profiles');
   return data.profiles ?? [];
 }
@@ -72,7 +81,7 @@ export class ApiProfileRepository implements ProfileRepository {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...profile, photo }),
     });
-    if (!res.ok) throw new Error(`Create failed (${res.status})`);
+    if (!res.ok) throw await apiError(res, 'Create failed');
     const created = await parseJsonOrThrow<StorytellerProfile>(res, 'Create profile');
     writeActive(created.id);
     return created;
@@ -87,7 +96,7 @@ export class ApiProfileRepository implements ProfileRepository {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    if (!res.ok) throw new Error(`Update failed (${res.status})`);
+    if (!res.ok) throw await apiError(res, 'Update failed');
     return parseJsonOrThrow<StorytellerProfile>(res, 'Update profile');
   }
 
