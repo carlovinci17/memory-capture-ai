@@ -30,7 +30,7 @@ export const DEMO_PROFILES_PREFILL = [
     birthplace: 'Ballarat, Victoria',
     bio: 'Grew up on a farm during the post-war years. Worked at Myer in Melbourne before marrying Gerald and raising three children in Fitzroy.',
     gender: 'F' as const,
-    personaId: 'journalist' as const,
+    personaId: 'historian' as const,
     photo: '/demo/eleanor.jpg' as string | null,
   },
   {
@@ -50,7 +50,7 @@ export const DEMO_PROFILES_PREFILL = [
     birthplace: 'Kumasi, Ghana',
     bio: 'Raised by a schoolteacher father and market trader mother in Kumasi. Studied engineering in Accra, moved to Manchester in 2001, and coaches youth football on weekends.',
     gender: 'M' as const,
-    personaId: 'journalist' as const,
+    personaId: 'researcher' as const,
     photo: '/demo/kofi.jpg' as string | null,
   },
 ];
@@ -113,7 +113,7 @@ export function getFullDemoStore(activeId: string = DEMO_ID_THOMAS): Store {
         bio: 'Grew up on a farm during the post-war years. Worked at Myer in Melbourne before marrying Gerald and raising three children in Fitzroy.',
         photo: '/demo/eleanor.jpg',
         gender: 'F',
-        personaId: 'journalist',
+        personaId: 'historian',
         sessions: 1,
         createdAt: base - 86400000 * 30,
         memories: [
@@ -206,7 +206,7 @@ export function getFullDemoStore(activeId: string = DEMO_ID_THOMAS): Store {
         bio: 'Raised by a schoolteacher father and market trader mother in Kumasi. Studied engineering in Accra, moved to Manchester in 2001, and coaches youth football on weekends.',
         photo: '/demo/kofi.jpg',
         gender: 'M',
-        personaId: 'journalist',
+        personaId: 'researcher',
         sessions: 1,
         createdAt: base - 86400000 * 12,
         memories: [
