@@ -1,7 +1,7 @@
 {
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/assets/*", "/*.{css,js,png,jpg,svg,ico,woff,woff2}"]
+    "exclude": ["/api/*", "/assets/*", "/*.{css,js,png,jpg,svg,ico,woff,woff2}"]
   },
   "routes": [
     { "route": "/login", "rewrite": "/.auth/login/github" },
