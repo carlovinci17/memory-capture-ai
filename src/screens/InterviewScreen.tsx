@@ -241,7 +241,7 @@ const MODES: { id: Mode; label: string; icon: IconName; sub: string }[] = [
 
 export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   const navigate = useNavigate();
-  const { changePersona, finishSession, updateMemory, resetAll } = useStore();
+  const { changePersona, finishSession, updateMemory } = useStore();
   const engine = useMemo(() => getInterviewEngine(), []);
   const persona = getPersona(profile.personaId);
 
@@ -557,9 +557,8 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
           if (!imageUrl) return;
           if (mountedRef.current) {
             setMemories((prev) => prev.map((m) => m.id === card.id ? { ...m, imageUrl } : m));
-          } else {
-            void updateMemory(profile.id, card.id, { imageUrl });
           }
+          void updateMemory(profile.id, card.id, { imageUrl });
         });
       }
       addNoticed([
@@ -721,7 +720,10 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
       void speak(lastAiMsg.text, persona.voice).then(() => {
         if (!mountedRef.current) return;
         setAiSpeaking(false);
+        if (modeRef.current === 'ai') void startListening();
       });
+    } else if (modeRef.current === 'ai') {
+      void startListening();
     }
   };
 
@@ -766,17 +768,13 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
           </h2>
           <p style={{ color: 'var(--ink-2)', lineHeight: 1.6, marginBottom: 28 }}>
             You've completed {DEMO_SESSION_LIMIT} interview sessions in this demo.
-            Reset to start fresh and experience it again from the beginning.
+            Reset demo data from the admin panel to start fresh.
           </p>
           <button
             className="btn btn--primary"
-            onClick={async () => {
-              localStorage.removeItem(DEMO_SESSION_KEY);
-              await resetAll();
-              window.location.reload();
-            }}
+            onClick={() => navigate('/admin')}
           >
-            <Icon name="spark" size={16} /> Reset demo
+            <Icon name="arrow" size={16} /> Go to admin
           </button>
         </div>
       </div>

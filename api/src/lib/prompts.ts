@@ -82,7 +82,8 @@ export function extractSystem(): string {
     'The input may contain one answer or several related answers on the same theme — treat them as one memory.',
     'Do NOT invent facts. The "excerpt" MUST be a verbatim phrase taken directly from the input.',
     'If the content is too thin to be a memory, return title: null with empty excerpt and summary.',
-    'Keep title ≤ 6 words with no year. Excerpt ≤ 160 chars. Summary: 1–2 warm, specific sentences.',
+    'Keep title ≤ 6 words with no year. Excerpt ≤ 160 chars.',
+    'Summary: exactly 2–3 sentences. Write as a warm, family-friendly narrative that retells the whole story shared — covering what happened, who was there, and how it felt. Gentle and personal in tone, as if written for a family keepsake book.',
   ].join('\n');
 }
 

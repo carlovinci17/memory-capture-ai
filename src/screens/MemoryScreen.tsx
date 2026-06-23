@@ -7,7 +7,8 @@ import { isSpeechAvailable, speak, stopSpeaking } from '../lib/speech/speechServ
 import { getPersona } from '../lib/domain/personas';
 import { firstNameOf } from '../lib/format';
 import { useStore } from '../lib/store/StoreProvider';
-import type { StorytellerProfile } from '../lib/domain/types';
+import { illustrateMemory } from '../lib/ai/illustrateMemory';
+import type { StorytellerProfile, Memory } from '../lib/domain/types';
 
 export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
   const navigate = useNavigate();
@@ -18,6 +19,14 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
   const [voiceAvailable, setVoiceAvailable] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [transcriptOpen, setTranscriptOpen] = useState(false);
+
+  // Answer editor
+  const [editingAnswer, setEditingAnswer] = useState(false);
+  const [answerDraft, setAnswerDraft] = useState('');
+  const [regenerating, setRegenerating] = useState(false);
+
+  // Image generation
+  const [generatingImage, setGeneratingImage] = useState(false);
 
   // Year editor
   const [addingYear, setAddingYear] = useState(false);
@@ -61,6 +70,64 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
       </div>
     );
   }
+
+  const reextract = async (mem: Memory): Promise<{ summary: string; excerpt: string } | null> => {
+    const peopleCtx = (mem.people ?? []).map((p) => p.relation ? `${p.text} (${p.relation})` : p.text).join(', ');
+    const placesCtx = (mem.places ?? []).join(', ');
+    const yearsCtx = (mem.years ?? []).join(', ');
+    const enrichment = [
+      peopleCtx && `People: ${peopleCtx}`,
+      placesCtx && `Places: ${placesCtx}`,
+      yearsCtx && `Dates: ${yearsCtx}`,
+    ].filter(Boolean).join('. ');
+    const answerText = [
+      mem.answer || mem.excerpt,
+      enrichment && `[Context — ${enrichment}]`,
+    ].filter(Boolean).join('\n\n').slice(0, 4000);
+    try {
+      const res = await fetch('/api/interview/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answerText }),
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as { summary?: string; excerpt?: string };
+      if (!data.summary) return null;
+      return { summary: data.summary, excerpt: data.excerpt ?? mem.excerpt };
+    } catch {
+      return null;
+    }
+  };
+
+  const saveAnswer = async () => {
+    const trimmed = answerDraft.trim();
+    if (!trimmed) return;
+    setRegenerating(true);
+    const patch: Partial<Memory> = { answer: trimmed };
+    const updated: Memory = { ...memory!, answer: trimmed };
+    const extracted = await reextract(updated);
+    if (extracted) {
+      patch.summary = extracted.summary;
+      patch.excerpt = extracted.excerpt;
+    }
+    await updateMemory(profile.id, memory!.id, patch);
+    setRegenerating(false);
+    setEditingAnswer(false);
+  };
+
+  const generateImage = async () => {
+    if (!memory || generatingImage) return;
+    setGeneratingImage(true);
+    const imageUrl = await illustrateMemory({
+      memoryId: memory.id,
+      title: memory.title,
+      summary: memory.summary,
+      theme: memory.theme,
+      era: memory.era,
+    });
+    if (imageUrl) await updateMemory(profile.id, memory.id, { imageUrl });
+    setGeneratingImage(false);
+  };
 
   const readAloud = async () => {
     if (speaking) {
@@ -128,8 +195,22 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
 
       {/* Header */}
       <section className="profile-hero rise">
-        <div className="profile-portrait">
+        <div className="profile-portrait" style={{ position: 'relative' }}>
           <MemoryArt memory={memory} seed={(memory.title || '').length + 3} />
+          {generatingImage && (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', background: 'rgba(0,0,0,0.18)' }}>
+              <span className="painting-indicator">
+                <svg className="painting-indicator__icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 20h9"/>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+                Painting
+                <span className="painting-indicator__dot">.</span>
+                <span className="painting-indicator__dot">.</span>
+                <span className="painting-indicator__dot">.</span>
+              </span>
+            </div>
+          )}
         </div>
         <div style={{ position: 'relative' }}>
           <div className="eyebrow">
@@ -143,6 +224,12 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
               <button className="btn btn--ghost" onClick={() => void readAloud()}>
                 <Icon name={speaking ? 'pause' : 'mic'} size={15} />
                 {speaking ? 'Stop' : 'Read aloud'}
+              </button>
+            )}
+            {!memory.imageUrl && (
+              <button className="btn btn--ghost" onClick={() => void generateImage()} disabled={generatingImage}>
+                <Icon name="spark" size={15} />
+                {generatingImage ? 'Generating…' : 'Generate image'}
               </button>
             )}
             <button className="btn-delete" onClick={() => void onDelete()}>
@@ -166,49 +253,63 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
                 </p>
               </>
             )}
-            {memory.summary ? (
-              <>
-                <div className="eyebrow" style={{ marginBottom: 10 }}>Summary</div>
-                <p style={{ fontSize: 15, lineHeight: 1.7, color: 'var(--ink)', margin: '0 0 18px' }}>
-                  {memory.summary}
-                </p>
-                <p className="mem__excerpt">{memory.excerpt}</p>
-              </>
-            ) : (
-              <>
-                <div className="eyebrow" style={{ marginBottom: 10 }}>Summary</div>
-                <p className="mem__excerpt">{memory.excerpt}</p>
-              </>
-            )}
-            {!memory.transcript?.length && memory.answer && memory.answer !== memory.excerpt && (
-              <>
-                <div className="eyebrow" style={{ margin: '18px 0 8px' }}>In their own words</div>
-                <p style={{ fontFamily: 'var(--font-display)', fontSize: 17, lineHeight: 1.7, margin: 0 }}>
-                  {memory.answer}
-                </p>
-              </>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div className="eyebrow">Summary</div>
+              {regenerating && <span className="ob-hint" style={{ margin: 0, fontSize: 12 }}>Updating…</span>}
+            </div>
+            <p style={{ fontSize: 15, lineHeight: 1.7, color: 'var(--ink)', margin: 0 }}>
+              {memory.summary || memory.excerpt}
+            </p>
           </div>
 
-          {/* Full conversation — collapsible */}
+          {/* Conversation — collapsible, with edit */}
           {hasFullContent && (
             <div className="panel rise">
-              <button
-                className="mem__expand-btn"
-                onClick={() => setTranscriptOpen((o) => !o)}
-                aria-expanded={transcriptOpen}
-              >
-                <Icon
-                  name="chev"
-                  size={15}
-                  style={{ transform: transcriptOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}
-                />
-                {transcriptOpen ? 'Hide full conversation' : 'See the full conversation'}
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <button
+                  className="mem__expand-btn"
+                  onClick={() => { setTranscriptOpen((o) => !o); if (editingAnswer) setEditingAnswer(false); }}
+                  aria-expanded={transcriptOpen}
+                  style={{ flex: 1 }}
+                >
+                  <Icon
+                    name="chev"
+                    size={15}
+                    style={{ transform: transcriptOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}
+                  />
+                  {transcriptOpen ? 'Hide conversation' : 'See the conversation'}
+                </button>
+                {transcriptOpen && !editingAnswer && (
+                  <button
+                    className="chip"
+                    style={{ fontSize: 12, marginLeft: 10 }}
+                    onClick={() => { setAnswerDraft(memory.answer || memory.excerpt); setEditingAnswer(true); }}
+                  >
+                    <Icon name="arrow" size={12} /> Edit
+                  </button>
+                )}
+              </div>
 
               {transcriptOpen && (
                 <div style={{ marginTop: 18 }}>
-                  {memory.transcript && memory.transcript.length ? (
+                  {editingAnswer ? (
+                    <>
+                      <textarea
+                        value={answerDraft}
+                        onChange={(e) => setAnswerDraft(e.target.value)}
+                        rows={8}
+                        style={{ width: '100%', boxSizing: 'border-box', fontFamily: 'var(--font-display)', fontSize: 15, lineHeight: 1.7, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line)', resize: 'vertical' }}
+                      />
+                      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                        <button className="btn btn--primary" style={{ fontSize: 13 }} onClick={() => void saveAnswer()} disabled={regenerating || !answerDraft.trim()}>
+                          {regenerating ? 'Saving…' : 'Save & regenerate summary'}
+                        </button>
+                        <button className="btn btn--ghost" style={{ fontSize: 13 }} onClick={() => setEditingAnswer(false)} disabled={regenerating}>
+                          Cancel
+                        </button>
+                      </div>
+                    </>
+                  ) : memory.transcript && memory.transcript.length ? (
                     memory.transcript.map((t, i) => (
                       <div key={i} className={'bubble bubble--' + t.who} style={{ marginBottom: 10 }}>
                         <div className="bubble__who">

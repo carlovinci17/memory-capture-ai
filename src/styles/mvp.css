@@ -830,7 +830,7 @@
 }
 .sum-photo-frame__mat {
   background: #f2ece0;
-  padding: 8px 8px 30px;
+  padding: 8px;
 }
 .sum-photo-frame__photo {
   display: block;
@@ -1041,7 +1041,7 @@
 .iv__topic-label {
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: .13em;
+  letter-spacing: 0.13em;
   font-weight: 700;
   color: var(--ink-3);
   margin-bottom: 10px;
@@ -1061,7 +1061,10 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  transition: border-color 0.16s, box-shadow 0.16s, transform 0.16s;
+  transition:
+    border-color 0.16s,
+    box-shadow 0.16s,
+    transform 0.16s;
   box-shadow: var(--shadow-sm);
 }
 .iv__topic-card:hover:not([disabled]) {

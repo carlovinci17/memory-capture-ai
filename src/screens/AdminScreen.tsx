@@ -2,15 +2,18 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { WatercolorDefs } from '../components/Watercolor';
 import { Icon } from '../components/Icon';
-import { isDemoMode, setRuntimeMode, verifyAdminPassword } from '../lib/demo/demoMode';
+import { isDemoMode, setRuntimeMode, verifyAdminPassword, DEMO_SESSION_KEY } from '../lib/demo/demoMode';
+import { useStore } from '../lib/store/StoreProvider';
 
 export function AdminScreen() {
   const navigate = useNavigate();
+  const { resetAll } = useStore();
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [error, setError] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => { inputRef.current?.focus(); }, []);
@@ -29,6 +32,13 @@ export function AdminScreen() {
       setError(true);
       setPassword('');
     }
+  };
+
+  const resetDemo = async () => {
+    setResetting(true);
+    localStorage.removeItem(DEMO_SESSION_KEY);
+    await resetAll();
+    window.location.reload();
   };
 
   const switchTo = async (mode: 'demo' | 'production') => {
@@ -158,6 +168,16 @@ export function AdminScreen() {
                     style={{ width: '100%' }}
                   >
                     Switch to Demo mode
+                  </button>
+                )}
+                {currentMode === 'demo' && (
+                  <button
+                    className="btn btn--ghost"
+                    onClick={() => void resetDemo()}
+                    disabled={resetting}
+                    style={{ width: '100%' }}
+                  >
+                    <Icon name="spark" size={15} /> {resetting ? 'Resetting…' : 'Reset demo data'}
                   </button>
                 )}
                 <button

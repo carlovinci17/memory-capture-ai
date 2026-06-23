@@ -35,13 +35,28 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
   const [photo, setPhoto] = useState<string | null>(initial?.photo ?? null);
   const [gender, setGender] = useState<'M' | 'F' | ''>(initial?.gender ?? '');
   const [personaId, setPersonaId] = useState<PersonaId>(initial?.personaId ?? PERSONAS[0].id);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const onPickFile = (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
     const reader = new FileReader();
-    reader.onload = () => setPhoto(typeof reader.result === 'string' ? reader.result : null);
+    reader.onload = () => {
+      const src = reader.result as string;
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 1200;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        setPhoto(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.src = src;
+    };
     reader.readAsDataURL(f);
   };
 
@@ -50,26 +65,33 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
   const yearLooksOff = yearBorn.length === 4 && (yearNum < 1900 || yearNum > CURRENT_YEAR);
 
   const submit = async () => {
-    if (!canSubmit) return;
-    const payload: Omit<StorytellerProfile, 'id'> = {
-      name: name.trim(),
-      yearBorn: String(yearBorn).trim(),
-      birthplace: place.trim(),
-      bio: bio.trim(),
-      photo,
-      gender: gender === 'M' ? 'M' : gender === 'F' ? 'F' : undefined,
-      personaId,
-      sessions: initial?.sessions ?? 0,
-      memories: initial?.memories ?? [],
-      createdAt: initial?.createdAt ?? Date.now(),
-    };
-    if (editing && initial) {
-      await updateProfile(initial.id, { ...payload, id: initial.id });
-      navigate(`/profiles/${initial.id}`);
-    } else {
-      const created = await createProfile(payload);
-      navigate('/home');
-      void created;
+    if (!canSubmit || submitting) return;
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const payload: Omit<StorytellerProfile, 'id'> = {
+        name: name.trim(),
+        yearBorn: String(yearBorn).trim(),
+        birthplace: place.trim(),
+        bio: bio.trim(),
+        photo,
+        gender: gender === 'M' ? 'M' : gender === 'F' ? 'F' : undefined,
+        personaId,
+        sessions: initial?.sessions ?? 0,
+        memories: initial?.memories ?? [],
+        createdAt: initial?.createdAt ?? Date.now(),
+      };
+      if (editing && initial) {
+        await updateProfile(initial.id, { ...payload, id: initial.id });
+        navigate(`/profiles/${initial.id}`);
+      } else {
+        const created = await createProfile(payload);
+        navigate('/home');
+        void created;
+      }
+    } catch {
+      setSubmitError('Something went wrong saving your profile. Please try again.');
+      setSubmitting(false);
     }
   };
 
@@ -344,9 +366,15 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
         </p>
 
         <div className="ob__actions">
-            <button className="btn btn--primary" disabled={!canSubmit} onClick={submit}>
+            <button className="btn btn--primary" disabled={!canSubmit || submitting} onClick={submit}>
               <Icon name={editing ? 'arrow' : 'spark'} size={16} />{' '}
-              {editing ? 'Save changes' : adding ? 'Create journal' : 'Create my journal'}
+              {submitting
+                ? 'Saving…'
+                : editing
+                  ? 'Save changes'
+                  : adding
+                    ? 'Create journal'
+                    : 'Create my journal'}
             </button>
             {showCancel ? (
               <button className="ob__cancel" onClick={onCancel}>
@@ -356,6 +384,11 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
             {!editing && !canSubmit ? (
               <span className="ob-hint" style={{ margin: 0 }}>
                 Add your name to continue
+              </span>
+            ) : null}
+            {submitError ? (
+              <span className="ob-hint" style={{ margin: 0, color: 'var(--error, #c0392b)' }}>
+                {submitError}
               </span>
             ) : null}
             {editing ? (

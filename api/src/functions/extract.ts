@@ -24,7 +24,7 @@ async function handler(req: HttpRequest, context: InvocationContext): Promise<Ht
       {
         model: getDeployment(),
         temperature: 0,
-        max_tokens: 300,
+        max_tokens: 500,
         response_format: { type: 'json_schema', json_schema: EXTRACTION_JSON_SCHEMA },
         messages: [
           { role: 'system', content: extractSystem() },

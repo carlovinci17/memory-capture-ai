@@ -1,9 +1,8 @@
 // Sidebar.tsx — trimmed MVP navigation (Home / Interview / Profiles).
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { Icon, type IconName } from './Icon';
 import { A11yMenu } from './A11yMenu';
 import { useAuth } from '../lib/auth/auth';
-import { useStore } from '../lib/store/StoreProvider';
 
 const ITEMS: { to: string; label: string; icon: IconName }[] = [
   { to: '/home', label: 'Home', icon: 'home' },
@@ -11,21 +10,13 @@ const ITEMS: { to: string; label: string; icon: IconName }[] = [
   { to: '/profiles', label: 'Profiles', icon: 'profile' },
 ];
 
-export function Sidebar() {
-  const { mode, user, logout } = useAuth();
-  const { resetAll } = useStore();
-  const navigate = useNavigate();
+interface SidebarProps {
+  collapsed?: boolean;
+  onToggle?: () => void;
+}
 
-  const onReset = async () => {
-    if (
-      window.confirm(
-        'Reset demo data? This permanently deletes all storytellers and their captured memories.',
-      )
-    ) {
-      await resetAll();
-      navigate('/onboarding');
-    }
-  };
+export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+  const { mode, user, logout } = useAuth();
 
   return (
     <aside className="sidebar">
@@ -51,6 +42,18 @@ export function Sidebar() {
       </nav>
 
       <div className="sidebar__spacer" />
+      {onToggle && (
+        <button
+          className="nav__item sidebar__collapse-btn"
+          onClick={onToggle}
+          aria-label={collapsed ? 'Show sidebar' : 'Hide sidebar'}
+          title={collapsed ? 'Show sidebar' : 'Hide sidebar'}
+          style={{ margin: '0 8px 4px' }}
+        >
+          <Icon name="chev" size={16} className="nav__icon" style={{ transform: 'rotate(90deg)' }} />
+          <span>Hide sidebar</span>
+        </button>
+      )}
       <A11yMenu />
       <NavLink
         to="/privacy"
@@ -68,14 +71,6 @@ export function Sidebar() {
         <Icon name="lock" className="nav__icon" />
         <span>Admin</span>
       </NavLink>
-      <button
-        className="nav__item"
-        onClick={() => void onReset()}
-        style={{ margin: '0 8px 4px', color: 'var(--accent-ink)' }}
-      >
-        <Icon name="pause" className="nav__icon" />
-        <span>Reset demo data</span>
-      </button>
       {mode === 'swa' && (
         <button className="nav__item" onClick={logout} style={{ margin: '0 8px 8px' }}>
           <Icon name="pause" className="nav__icon" />

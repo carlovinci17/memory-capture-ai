@@ -1,5 +1,6 @@
 // App.tsx — routing + app shell. Guest/local mode; cloud auth lands in M9.
 import { Navigate, Outlet, Route, Routes, useLocation, useParams } from 'react-router-dom';
+import { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
 import { WatercolorDefs } from './components/Watercolor';
@@ -29,18 +30,44 @@ function meta(pathname: string, profile: StorytellerProfile): { eyebrow: string;
 function AppLayout() {
   const { activeProfile } = useStore();
   const location = useLocation();
+  const [collapsed, setCollapsed] = useState(
+    () => localStorage.getItem('mcap_sidebar_collapsed') === '1',
+  );
+
+  const toggleSidebar = () => {
+    setCollapsed((v) => {
+      const next = !v;
+      localStorage.setItem('mcap_sidebar_collapsed', next ? '1' : '0');
+      return next;
+    });
+  };
 
   if (!activeProfile) return <Navigate to="/onboarding" replace />;
 
   const { eyebrow, title } = meta(location.pathname, activeProfile);
 
   return (
-    <div className="app" data-mood="terracotta" data-type="editorial" data-texture="medium">
+    <div
+      className={'app' + (collapsed ? ' app--sidebar-collapsed' : '')}
+      data-mood="terracotta"
+      data-type="editorial"
+      data-texture="medium"
+    >
       <a className="skip-link" href="#main">
         Skip to main content
       </a>
       <WatercolorDefs />
-      <Sidebar />
+      <Sidebar onToggle={toggleSidebar} collapsed={collapsed} />
+      {collapsed && (
+        <button
+          className="sidebar-tab"
+          onClick={toggleSidebar}
+          aria-label="Show sidebar"
+          title="Show sidebar"
+        >
+          <Icon name="chev" size={14} style={{ transform: 'rotate(-90deg)' }} />
+        </button>
+      )}
       <main className="main" id="main">
         <TopBar eyebrow={eyebrow} title={title} profile={activeProfile} />
         <Outlet context={activeProfile} />

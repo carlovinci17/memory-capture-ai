@@ -96,6 +96,7 @@ body {
   grid-template-columns: var(--sidebar-w) 1fr;
   height: 100vh;
   overflow: hidden;
+  transition: grid-template-columns 0.25s ease;
   background:
     radial-gradient(1200px 800px at 78% -8%, color-mix(in oklab, var(--bloom-a) 22%, transparent), transparent 60%),
     radial-gradient(1000px 700px at -6% 108%, color-mix(in oklab, var(--bloom-c) 18%, transparent), transparent 55%),
@@ -175,6 +176,49 @@ body {
 }
 
 .sidebar__spacer { flex: 1; }
+.sidebar__collapse-btn { color: var(--ink-3); }
+.sidebar__collapse-btn:hover { color: var(--ink); }
+
+/* ---------- Collapsed sidebar ---------- */
+.app--sidebar-collapsed {
+  grid-template-columns: 0 1fr;
+}
+.app--sidebar-collapsed .sidebar {
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.sidebar {
+  transition: opacity 0.2s ease;
+}
+
+/* Floating tab to re-open the sidebar */
+.sidebar-tab {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 48px;
+  border: none;
+  border-radius: 0 8px 8px 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: none;
+  color: var(--ink-3);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: color 0.15s, background 0.15s;
+}
+.sidebar-tab:hover {
+  color: var(--ink);
+  background: var(--surface-2);
+}
 
 .side-cta {
   margin: 8px 4px 12px;
