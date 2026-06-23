@@ -1,5 +1,5 @@
 // App.tsx — routing + app shell. Guest/local mode; cloud auth lands in M9.
-import { Navigate, Outlet, Route, Routes, useLocation, useParams } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
@@ -85,6 +85,7 @@ function useActiveProfile(): StorytellerProfile {
 
 export default function App() {
   const { ready, profiles, loadError, reload } = useStore();
+  const navigate = useNavigate();
 
   if (!ready) {
     return (
@@ -119,9 +120,14 @@ export default function App() {
           <p className="ob-hint" style={{ fontFamily: 'monospace', fontSize: 12, opacity: 0.5 }}>
             {loadError}
           </p>
-          <button className="btn btn--primary" style={{ marginTop: 12 }} onClick={reload}>
-            <Icon name="arrow" size={16} /> Try again
-          </button>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 12, flexWrap: 'wrap' }}>
+            <button className="btn btn--primary" onClick={reload}>
+              <Icon name="arrow" size={16} /> Try again
+            </button>
+            <button className="btn btn--ghost" onClick={() => navigate('/admin')}>
+              Admin
+            </button>
+          </div>
         </div>
       </div>
     );

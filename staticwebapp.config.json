@@ -8,9 +8,6 @@
     { "route": "/logout", "rewrite": "/.auth/logout" },
     { "route": "/.auth/login/aad", "statusCode": 404 },
     { "route": "/.auth/login/twitter", "statusCode": 404 },
-    { "route": "/api/profiles", "allowedRoles": ["authenticated"] },
-    { "route": "/api/profiles/*", "allowedRoles": ["authenticated"] },
-    { "route": "/api/uploads/*", "allowedRoles": ["authenticated"] },
     { "route": "/api/*", "allowedRoles": ["authenticated", "anonymous"] }
   ],
   "globalHeaders": {
