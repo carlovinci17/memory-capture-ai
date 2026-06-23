@@ -77,6 +77,15 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           <span>Sign out{user?.name ? ` · ${user.name}` : ''}</span>
         </button>
       )}
+      <footer className="sidebar__footer">
+        <p>© 2026 Memory Capture AI</p>
+        <p>
+          By{' '}
+          <a href="https://carlovinci.com.au" target="_blank" rel="noopener noreferrer">
+            Carlo Vinci
+          </a>
+        </p>
+      </footer>
     </aside>
   );
 }

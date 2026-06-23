@@ -178,6 +178,13 @@ body {
 .sidebar__spacer { flex: 1; }
 .sidebar__collapse-btn { color: var(--ink-3); }
 .sidebar__collapse-btn:hover { color: var(--ink); }
+.sidebar__footer {
+  font-size: 11px; color: var(--ink-4); line-height: 1.6;
+  padding: 10px 12px 4px; margin-top: 6px;
+  border-top: 1px solid var(--line-2);
+}
+.sidebar__footer a { color: var(--ink-3); text-decoration: underline; }
+.sidebar__footer a:hover { color: var(--ink); }
 
 /* ---------- Collapsed sidebar ---------- */
 .app--sidebar-collapsed {
