@@ -24,10 +24,21 @@ function writeActive(id: string | null): void {
   }
 }
 
+async function parseJsonOrThrow<T>(res: Response, label: string): Promise<T> {
+  const ct = res.headers.get('content-type') ?? '';
+  if (!ct.includes('application/json')) {
+    const preview = (await res.text()).slice(0, 80);
+    throw new Error(
+      `${label} (${res.status}): expected JSON but got "${preview}…" — API may not be deployed`,
+    );
+  }
+  return res.json() as Promise<T>;
+}
+
 async function listProfiles(): Promise<StorytellerProfile[]> {
   const res = await fetch(`${BASE}/profiles`);
   if (!res.ok) throw new Error(`Failed to load profiles (${res.status})`);
-  const data = (await res.json()) as { profiles: StorytellerProfile[] };
+  const data = await parseJsonOrThrow<{ profiles: StorytellerProfile[] }>(res, 'Load profiles');
   return data.profiles ?? [];
 }
 
@@ -41,7 +52,7 @@ async function resolvePhoto(photo: string | null | undefined): Promise<string | 
     body: JSON.stringify({ dataUrl: photo }),
   });
   if (!res.ok) throw new Error(`Photo upload failed (${res.status})`);
-  const data = (await res.json()) as { url: string };
+  const data = await parseJsonOrThrow<{ url: string }>(res, 'Photo upload');
   return data.url;
 }
 
@@ -62,7 +73,7 @@ export class ApiProfileRepository implements ProfileRepository {
       body: JSON.stringify({ ...profile, photo }),
     });
     if (!res.ok) throw new Error(`Create failed (${res.status})`);
-    const created = (await res.json()) as StorytellerProfile;
+    const created = await parseJsonOrThrow<StorytellerProfile>(res, 'Create profile');
     writeActive(created.id);
     return created;
   }
@@ -77,7 +88,7 @@ export class ApiProfileRepository implements ProfileRepository {
       body: JSON.stringify(body),
     });
     if (!res.ok) throw new Error(`Update failed (${res.status})`);
-    return (await res.json()) as StorytellerProfile;
+    return parseJsonOrThrow<StorytellerProfile>(res, 'Update profile');
   }
 
   async remove(id: string): Promise<string | null> {
