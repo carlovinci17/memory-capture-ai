@@ -222,6 +222,14 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+                <button
+                  type="button"
+                  className={'btn btn--secondary ob-demo-banner__btn' + (isDemoLoad ? ' is-loaded' : '')}
+                  onClick={loadDemoProfile}
+                >
+                  <Icon name="spark" size={14} />
+                  {isDemoLoad ? 'Try another' : 'Try an example profile'}
+                </button>
                 {isDemoLoad && (
                   <button
                     type="button"
@@ -231,14 +239,6 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
                     Enter my details
                   </button>
                 )}
-                <button
-                  type="button"
-                  className={'btn btn--secondary ob-demo-banner__btn' + (isDemoLoad ? ' is-loaded' : '')}
-                  onClick={loadDemoProfile}
-                >
-                  <Icon name="spark" size={14} />
-                  {isDemoLoad ? 'Try another' : 'Try an example profile'}
-                </button>
               </div>
             </div>
           )}
