@@ -410,7 +410,6 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
                     </div>
                     <div className="persona-card__name">{p.name}</div>
                   </div>
-                  <div className="persona-card__blurb">{p.blurb}</div>
                 </button>
               ))}
             </div>
