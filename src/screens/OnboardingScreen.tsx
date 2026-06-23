@@ -228,7 +228,7 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
                   onClick={loadDemoProfile}
                 >
                   <Icon name="spark" size={14} />
-                  {isDemoLoad ? 'Try another' : 'Try an example profile'}
+                  {isDemoLoad ? 'Try another' : 'Example profile'}
                 </button>
                 {isDemoLoad && (
                   <button
