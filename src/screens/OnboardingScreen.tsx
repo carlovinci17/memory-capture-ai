@@ -102,7 +102,7 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
       if (editing && initial) {
         await updateProfile(initial.id, { ...payload, id: initial.id });
         navigate(`/profiles/${initial.id}`);
-      } else if (isDemoLoad && !adding) {
+      } else if (isDemoLoad) {
         // Enter demo mode (unless admin has locked to production) and seed
         // both fixed example profiles — no user-created profile needed.
         if (getRuntimeMode() !== 'production') setRuntimeMode('demo');
