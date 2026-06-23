@@ -215,7 +215,6 @@
   background: var(--surface-3, #e8f5f0);
   color: var(--accent);
   border-color: var(--accent);
-  pointer-events: none;
 }
 
 .ob-field {
