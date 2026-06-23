@@ -57,6 +57,18 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
     setDemoPickedId(pick.id);
   };
 
+  const clearDemoProfile = () => {
+    setName('');
+    setYearBorn('');
+    setPlace('');
+    setBio('');
+    setGender('');
+    setPersonaId(PERSONAS[0].id);
+    setPhoto(null);
+    setIsDemoLoad(false);
+    setDemoPickedId(null);
+  };
+
   const onPickFile = (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
@@ -209,14 +221,25 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
                   Pre-fill with a sample storyteller and discover the app with demo data already loaded.
                 </div>
               </div>
-              <button
-                type="button"
-                className={'btn btn--secondary ob-demo-banner__btn' + (isDemoLoad ? ' is-loaded' : '')}
-                onClick={loadDemoProfile}
-              >
-                <Icon name="spark" size={14} />
-                {isDemoLoad ? 'Try another' : 'Try an example profile'}
-              </button>
+              <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                {isDemoLoad && (
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={clearDemoProfile}
+                  >
+                    Enter my details
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className={'btn btn--secondary ob-demo-banner__btn' + (isDemoLoad ? ' is-loaded' : '')}
+                  onClick={loadDemoProfile}
+                >
+                  <Icon name="spark" size={14} />
+                  {isDemoLoad ? 'Try another' : 'Try an example profile'}
+                </button>
+              </div>
             </div>
           )}
 
