@@ -121,9 +121,18 @@ export default function App() {
             {loadError}
           </p>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 12, flexWrap: 'wrap' }}>
-            <button className="btn btn--primary" onClick={reload}>
-              <Icon name="arrow" size={16} /> Try again
-            </button>
+            {isAuth ? (
+              <a
+                className="btn btn--primary"
+                href={`/.auth/login/github?post_login_redirect_uri=${encodeURIComponent(window.location.pathname)}`}
+              >
+                Sign in with GitHub
+              </a>
+            ) : (
+              <button className="btn btn--primary" onClick={reload}>
+                <Icon name="arrow" size={16} /> Try again
+              </button>
+            )}
             <button className="btn btn--ghost" onClick={() => navigate('/admin')}>
               Admin
             </button>
