@@ -48,7 +48,7 @@ export function TopBar({ eyebrow, title, profile }: TopBarProps) {
     <>
     {isDemoMode() && (
       <div className="demo-banner">
-        <span className="demo-banner__label">Portfolio Demo</span>
+        <span className="demo-banner__label">Demo mode active</span>
         <span className="demo-banner__note">
           Your data stays on this device only · AI processing via Azure (Microsoft)
           {' · '}<Link to="/privacy" className="demo-banner__link">How this works</Link>
