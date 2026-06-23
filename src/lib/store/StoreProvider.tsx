@@ -32,8 +32,8 @@ interface StoreContextValue {
   updateMemory(profileId: string, memoryId: string, patch: Partial<Memory>): Promise<void>;
   /** Delete every storyteller (and their memories) for a fresh start. */
   resetAll(): Promise<void>;
-  /** Set when the initial load failed (e.g. cloud API unreachable). */
-  loadError: boolean;
+  /** Set when the initial load failed — contains the error message, null when ok. */
+  loadError: string | null;
   /** Retry the initial load. */
   reload(): void;
 }
@@ -46,13 +46,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const repo = useMemo(() => getRepository(), []);
   const [store, setStore] = useState<Store>(EMPTY);
   const [ready, setReady] = useState(false);
-  const [loadError, setLoadError] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let alive = true;
     setReady(false);
-    setLoadError(false);
+    setLoadError(null);
     repo
       .load()
       .then((s) => {
@@ -68,11 +68,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
         setReady(true);
       })
-      .catch(() => {
-        if (alive) {
-          setLoadError(true);
-          setReady(true);
-        }
+      .catch((err: unknown) => {
+        if (!alive) return;
+        console.error('[StoreProvider] load failed:', err);
+        const msg = err instanceof Error ? err.message : String(err);
+        setLoadError(msg);
+        setReady(true);
       });
     return () => {
       alive = false;

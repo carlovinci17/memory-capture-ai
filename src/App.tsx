@@ -98,15 +98,26 @@ export default function App() {
   }
 
   if (loadError) {
+    const isAuth = /401|403|unauthorized|forbidden/i.test(loadError);
+    const isServer = /5\d\d/.test(loadError);
+    const heading = isAuth
+      ? 'Sign-in required'
+      : isServer
+        ? 'Service temporarily unavailable'
+        : "We couldn't reach your journal";
+    const detail = isAuth
+      ? 'Your session may have expired. Sign out and sign back in to continue.'
+      : isServer
+        ? 'Our servers are having a moment. Your stories are safe — please try again shortly.'
+        : 'This is usually a brief connection hiccup. Check your internet connection and try again.';
     return (
       <div className="ob-stage" data-mood="terracotta" role="alert">
         <WatercolorDefs />
         <div className="ob__panel" style={{ maxWidth: 460, margin: 'auto', textAlign: 'center' }}>
-          <h1 className="display" style={{ fontSize: 24 }}>
-            We couldn't reach your journal
-          </h1>
-          <p className="ob-hint">
-            Your stories are safe. This is usually a brief connection hiccup — please try again.
+          <h1 className="display" style={{ fontSize: 24 }}>{heading}</h1>
+          <p className="ob-hint">{detail}</p>
+          <p className="ob-hint" style={{ fontFamily: 'monospace', fontSize: 12, opacity: 0.5 }}>
+            {loadError}
           </p>
           <button className="btn btn--primary" style={{ marginTop: 12 }} onClick={reload}>
             <Icon name="arrow" size={16} /> Try again
