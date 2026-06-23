@@ -147,7 +147,7 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
     }
   };
 
-  const showCancel = editing || adding;
+  const showCancel = (editing || adding) && !isDemoLoad;
 
   return (
     <div className="ob-stage" data-mood="terracotta" data-type="editorial" data-texture="medium">

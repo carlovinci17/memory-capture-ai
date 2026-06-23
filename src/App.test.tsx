@@ -20,7 +20,7 @@ describe('App', () => {
   it('routes a first-time visitor to onboarding', async () => {
     renderApp('/');
     await waitFor(() =>
-      expect(screen.getByRole('heading', { name: /let’s begin your story/i })).toBeInTheDocument(),
+      expect(screen.getByRole('heading', { name: /let's begin your story/i })).toBeInTheDocument(),
     );
   });
 });
