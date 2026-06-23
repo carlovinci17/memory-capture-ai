@@ -221,7 +221,7 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
                   Pre-fill with a sample storyteller and discover the app with demo data already loaded.
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
                 {isDemoLoad && (
                   <button
                     type="button"
