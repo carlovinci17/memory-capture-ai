@@ -18,6 +18,16 @@ export function AdminScreen() {
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => { inputRef.current?.focus(); }, []);
 
+  // After GitHub OAuth redirects back to /admin the page resets.
+  // If a production switch was pending, auto-trigger it once unlocked.
+  useEffect(() => {
+    if (!unlocked) return;
+    if (sessionStorage.getItem('mcap_pending_production') !== '1') return;
+    sessionStorage.removeItem('mcap_pending_production');
+    void switchTo('production');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unlocked]);
+
   const currentMode = isDemoMode() ? 'demo' : 'production';
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -47,6 +57,7 @@ export function AdminScreen() {
         const r = await fetch('/.auth/me');
         const d = (await r.json()) as { clientPrincipal?: unknown };
         if (!d?.clientPrincipal) {
+          sessionStorage.setItem('mcap_pending_production', '1');
           window.location.href = '/.auth/login/github?post_login_redirect_uri=/admin';
           return;
         }
