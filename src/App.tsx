@@ -21,7 +21,7 @@ import type { StorytellerProfile } from './lib/domain/types';
 function meta(pathname: string, profile: StorytellerProfile): { eyebrow: string; title: string } {
   if (pathname.startsWith('/interview')) return { eyebrow: 'Live voice session', title: 'The Interview' };
   if (pathname.startsWith('/profiles/')) return { eyebrow: 'Storyteller', title: profile.name };
-  if (pathname.startsWith('/profiles')) return { eyebrow: 'Everyone’s stories', title: 'Profiles' };
+  if (pathname.startsWith('/profiles')) return { eyebrow: "Everyone's stories", title: 'Profiles' };
   if (pathname.startsWith('/summary')) return { eyebrow: 'Session complete', title: 'What we captured' };
   return { eyebrow: todayLabel(), title: 'Your Journal' };
 }
@@ -103,7 +103,7 @@ export default function App() {
         <WatercolorDefs />
         <div className="ob__panel" style={{ maxWidth: 460, margin: 'auto', textAlign: 'center' }}>
           <h1 className="display" style={{ fontSize: 24 }}>
-            We couldn’t reach your journal
+            We couldn't reach your journal
           </h1>
           <p className="ob-hint">
             Your stories are safe. This is usually a brief connection hiccup — please try again.

@@ -7,10 +7,13 @@ import { Bloom, WatercolorArt } from '../components/Watercolor';
 import { PERSONAS } from '../lib/domain/personas';
 import { initialsOf } from '../lib/format';
 import { useStore } from '../lib/store/StoreProvider';
+import { seedLocalStore } from '../lib/db/localRepository';
+import { getRuntimeMode, setRuntimeMode } from '../lib/demo/demoMode';
+import { DEMO_PROFILES_PREFILL, getFullDemoStore } from '../lib/demo/demoData';
 import type { PersonaId, StorytellerProfile } from '../lib/domain/types';
 
 const STEPS: { icon: IconName; t: string; d: string }[] = [
-  { icon: 'profile', t: 'Tell us who you are', d: 'A name, a place, a few words — that’s all we need to begin.' },
+  { icon: 'profile', t: 'Tell us who you are', d: "A name, a place, a few words — that's all we need to begin." },
   { icon: 'mic', t: 'Sit down for a chat', d: 'Your chosen companion asks gentle questions. You simply talk.' },
   {
     icon: 'spark',
@@ -22,7 +25,7 @@ const STEPS: { icon: IconName; t: string; d: string }[] = [
 const CURRENT_YEAR = new Date().getFullYear();
 
 export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
-  const { profiles, activeProfile, createProfile, updateProfile, deleteProfile } = useStore();
+  const { profiles, activeProfile, createProfile, updateProfile, deleteProfile, reload } = useStore();
   const navigate = useNavigate();
 
   const initial = editing ? activeProfile : null;
@@ -37,7 +40,22 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
   const [personaId, setPersonaId] = useState<PersonaId>(initial?.personaId ?? PERSONAS[0].id);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isDemoLoad, setIsDemoLoad] = useState(false);
+  const [demoPickedId, setDemoPickedId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const loadDemoProfile = () => {
+    const pick = DEMO_PROFILES_PREFILL[Math.floor(Math.random() * DEMO_PROFILES_PREFILL.length)];
+    setName(pick.name);
+    setYearBorn(pick.yearBorn);
+    setPlace(pick.birthplace);
+    setBio(pick.bio);
+    setGender(pick.gender);
+    setPersonaId(pick.personaId);
+    setPhoto(pick.photo);
+    setIsDemoLoad(true);
+    setDemoPickedId(pick.id);
+  };
 
   const onPickFile = (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -84,6 +102,13 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
       if (editing && initial) {
         await updateProfile(initial.id, { ...payload, id: initial.id });
         navigate(`/profiles/${initial.id}`);
+      } else if (isDemoLoad && !adding) {
+        // Enter demo mode (unless admin has locked to production) and seed
+        // both fixed example profiles — no user-created profile needed.
+        if (getRuntimeMode() !== 'production') setRuntimeMode('demo');
+        seedLocalStore(getFullDemoStore(demoPickedId ?? undefined));
+        reload();
+        navigate('/home');
       } else {
         const created = await createProfile(payload);
         navigate('/home');
@@ -103,7 +128,7 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
   const onDelete = async () => {
     if (!initial) return;
     if (
-      window.confirm('Delete this profile and everything you’ve captured? This can’t be undone.')
+      window.confirm("Delete this profile and everything you've captured? This can't be undone.")
     ) {
       const next = await deleteProfile(initial.id);
       navigate(next ? `/profiles/${next}` : '/onboarding');
@@ -140,15 +165,15 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
               </span>
             ) : (
               <span>
-                Let’s begin your <em>story</em>
+                Let's begin your <em>story</em>
               </span>
             )}
           </h1>
           <p className="ob__lead">
             {editing
-              ? 'Change anything below — your details flow through to your home, your interviews, and everything you’ve captured.'
+              ? "Change anything below — your details flow through to your home, your interviews, and everything you've captured."
               : adding
-                ? 'Set up another person’s journal. Each storyteller keeps their own memories, interviews and interviewer — switch between them any time from the top-right.'
+                ? "Set up another person's journal. Each storyteller keeps their own memories, interviews and interviewer — switch between them any time from the top-right."
                 : 'Memory Capture is a living journal of your life. A warm AI companion interviews you, and turns what you share into something your family will treasure.'}
           </p>
           <div className="ob__steps">
@@ -175,13 +200,34 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
             <div className="ob__panel-title">{editing ? 'Your details' : 'A little about you'}</div>
           </div>
 
+          {/* demo pre-fill banner — only shown on create / add, not edit */}
+          {!editing && (
+            <div className="ob-demo-banner">
+              <div className="ob-demo-banner__text">
+                <div className="ob-demo-banner__title">Enter your details, or try an example</div>
+                <div className="ob-demo-banner__sub">
+                  Pre-fill with a sample storyteller and discover the app with demo data already loaded.
+                </div>
+              </div>
+              <button
+                type="button"
+                className={'btn btn--secondary ob-demo-banner__btn' + (isDemoLoad ? ' is-loaded' : '')}
+                onClick={loadDemoProfile}
+              >
+                <Icon name="spark" size={14} />
+                {isDemoLoad ? 'Example loaded' : 'Try an example profile'}
+              </button>
+            </div>
+          )}
+
           {/* photo */}
           <div className="ob-field">
             <div className="ob-photo">
               <button
                 type="button"
                 className="ob-photo__drop"
-                onClick={() => fileRef.current?.click()}
+                onClick={() => !isDemoLoad && fileRef.current?.click()}
+                disabled={isDemoLoad}
                 aria-label="Upload a photo"
               >
                 {photo ? (
@@ -204,6 +250,7 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
                   onChange={onPickFile}
                   style={{ display: 'none' }}
                   tabIndex={-1}
+                  disabled={isDemoLoad}
                 />
               </button>
               <div>
@@ -214,23 +261,27 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
                 <div className="ob-photo__txt-d">
                   It appears across your journal. A recent or beloved old one — both are perfect.
                 </div>
-                <button
-                  type="button"
-                  className="ob-photo__link"
-                  onClick={() => fileRef.current?.click()}
-                >
-                  {photo ? 'Change photo' : 'Upload a photo'}
-                </button>
-                {photo ? (
-                  <button
-                    type="button"
-                    className="ob-photo__link"
-                    style={{ marginLeft: 14, color: 'var(--ink-3)' }}
-                    onClick={() => setPhoto(null)}
-                  >
-                    Remove
-                  </button>
-                ) : null}
+                {!isDemoLoad && (
+                  <>
+                    <button
+                      type="button"
+                      className="ob-photo__link"
+                      onClick={() => fileRef.current?.click()}
+                    >
+                      {photo ? 'Change photo' : 'Upload a photo'}
+                    </button>
+                    {photo ? (
+                      <button
+                        type="button"
+                        className="ob-photo__link"
+                        style={{ marginLeft: 14, color: 'var(--ink-3)' }}
+                        onClick={() => setPhoto(null)}
+                      >
+                        Remove
+                      </button>
+                    ) : null}
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -246,6 +297,7 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Eleanor Marchetti"
+              readOnly={isDemoLoad}
             />
           </div>
 
@@ -261,7 +313,8 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
                   type="button"
                   className={'chip' + (gender === g ? ' is-active' : '')}
                   aria-pressed={gender === g}
-                  onClick={() => setGender(gender === g ? '' : g)}
+                  onClick={() => !isDemoLoad && setGender(gender === g ? '' : g)}
+                  disabled={isDemoLoad}
                 >
                   {g === 'M' ? 'Male' : 'Female'}
                 </button>
@@ -283,17 +336,18 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
                 value={yearBorn}
                 onChange={(e) => setYearBorn(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
                 placeholder="1948"
+                readOnly={isDemoLoad}
                 aria-describedby={yearLooksOff ? 'ob-year-hint' : undefined}
               />
               {yearLooksOff ? (
                 <div id="ob-year-hint" className="ob-hint" style={{ color: 'var(--accent-ink)' }}>
-                  That year looks unusual — you can still keep it if it’s right.
+                  That year looks unusual — you can still keep it if it's right.
                 </div>
               ) : null}
             </div>
             <div>
               <label className="ob-label" htmlFor="ob-place">
-                Where you’re from <span className="opt">optional</span>
+                Where you're from <span className="opt">optional</span>
               </label>
               <input
                 id="ob-place"
@@ -301,6 +355,7 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
                 value={place}
                 onChange={(e) => setPlace(e.target.value)}
                 placeholder="Camogli, Italy"
+                readOnly={isDemoLoad}
               />
             </div>
           </div>
@@ -316,10 +371,13 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="Daughter of a fisherman, taught Italian for thirty-one years, mother of two…"
+              readOnly={isDemoLoad}
             />
-            <div className="ob-hint">
-              This becomes the opening line of your story. You can change it any time.
-            </div>
+            {!isDemoLoad && (
+              <div className="ob-hint">
+                This becomes the opening line of your story. You can change it any time.
+              </div>
+            )}
           </div>
 
           {/* persona */}
@@ -335,7 +393,8 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
                   role="radio"
                   aria-checked={p.id === personaId}
                   className={'persona-card' + (p.id === personaId ? ' is-active' : '')}
-                  onClick={() => setPersonaId(p.id)}
+                  onClick={() => !isDemoLoad && setPersonaId(p.id)}
+                  disabled={isDemoLoad}
                 >
                   <div className="persona-card__check">
                     <Icon name="arrow" size={12} />
@@ -361,7 +420,7 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
           <Icon name="heart" size={14} style={{ marginTop: 2, color: 'var(--accent)', flex: 'none' }} />
           <span>
             These stories stay private to your account. By continuing you confirm you have permission
-            to record {adding ? 'this person’s' : 'these'} memories.
+            to record {adding ? "this person's" : 'these'} memories.
           </span>
         </p>
 
@@ -369,12 +428,14 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
             <button className="btn btn--primary" disabled={!canSubmit || submitting} onClick={submit}>
               <Icon name={editing ? 'arrow' : 'spark'} size={16} />{' '}
               {submitting
-                ? 'Saving…'
+                ? 'Loading…'
                 : editing
                   ? 'Save changes'
-                  : adding
-                    ? 'Create journal'
-                    : 'Create my journal'}
+                  : isDemoLoad
+                    ? 'Load demo profiles'
+                    : adding
+                      ? 'Create journal'
+                      : 'Create my journal'}
             </button>
             {showCancel ? (
               <button className="ob__cancel" onClick={onCancel}>

@@ -8,11 +8,11 @@ import type { ExtractionResult, InterviewContext, InterviewEngine } from './type
 const STOPWORDS = new Set([
   'I', 'A', 'The', 'My', 'We', 'It', 'And', 'But', 'When', 'Where', 'There', 'That', 'This',
   'They', 'He', 'She', 'You', 'Me', 'Then', 'So', 'No', 'Yes', 'Oh', 'Well', 'Her', 'His', 'Our',
-  'Their', 'In', 'On', 'At', 'To', 'Of', 'For', 'With', 'Mr', 'Mrs', 'Ms', 'Dr', 'It’s', "It's",
+  'Their', 'In', 'On', 'At', 'To', 'Of', 'For', 'With', 'Mr', 'Mrs', 'Ms', 'Dr', "It's",
 ]);
 
 const FOLLOWUPS = [
-  'That’s wonderful. Who else was there with you in that memory?',
+  "That's wonderful. Who else was there with you in that memory?",
   'Tell me more — what did that feel like, in the moment?',
   'Beautiful. And what happened next?',
   'I can almost picture it. What sounds or smells come back to you?',
@@ -52,17 +52,17 @@ const FOLLOWUPS_BY_PERSONA: Record<string, string[]> = {
 
 const QUESTION_POOL = [
   'What were you like when you were my age?',
-  'What’s a smell or taste that takes you straight back home?',
+  "What's a smell or taste that takes you straight back home?",
   'Who made you laugh the most when you were growing up?',
   'What were Sunday afternoons like in your family?',
-  'What’s the bravest thing you’ve ever done?',
+  "What's the bravest thing you've ever done?",
   'What did your mother always used to say to you?',
   'Is there a story about our family you think I should know?',
   'What music was playing in the house when you were young?',
   'If you could relive one ordinary day, which one would it be?',
   '{place} — what did it look, sound and smell like back then?',
   'What do you hope we remember about you?',
-  'What’s something you’ve never told anyone?',
+  "What's something you've never told anyone?",
 ];
 
 function titleCase(s: string): string {
@@ -72,7 +72,7 @@ function titleCase(s: string): string {
 export function deriveTitle(text: string): string {
   const clean = text
     .replace(/\b(18|19|20)\d{2}\b/g, ' ')
-    .replace(/[^A-Za-z\s'’]/g, ' ')
+    .replace(/[^A-Za-z\s'']/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
   const words = clean.split(' ').filter(Boolean);
@@ -96,10 +96,10 @@ export function extractFrom(text: string): { years: string[]; names: string[] } 
   sentences.forEach((sent) => {
     const toks = sent.trim().split(/\s+/);
     toks.forEach((raw, i) => {
-      const w = raw.replace(/[^A-Za-z’']/g, '');
+      const w = raw.replace(/[^A-Za-z'']/g, '');
       if (i === 0) return;
       if (w.length < 3) return;
-      if (!/^[A-Z][a-z’']+$/.test(w)) return;
+      if (!/^[A-Z][a-z'']+$/.test(w)) return;
       if (STOPWORDS.has(w)) return;
       names.push(w);
     });

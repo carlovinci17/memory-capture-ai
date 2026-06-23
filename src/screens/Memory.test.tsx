@@ -36,6 +36,7 @@ describe('memory detail view (#5)', () => {
   beforeEach(() => localStorage.clear());
 
   it('shows the question, the verbatim answer, and noticed entities', async () => {
+    const user = userEvent.setup();
     seed();
     render(
       <MemoryRouter initialEntries={['/memories/mem1']}>
@@ -46,7 +47,9 @@ describe('memory detail view (#5)', () => {
     );
     await waitFor(() => screen.getByRole('heading', { name: /leaving camogli/i }));
     expect(screen.getByText(/take me back to the morning/i)).toBeInTheDocument();
-    expect(screen.getByText(/coiling the same rope/i)).toBeInTheDocument(); // full answer, not just excerpt
+    // Full answer is in the collapsible conversation section — expand it first
+    await user.click(screen.getByRole('button', { name: /see the conversation/i }));
+    expect(screen.getByText(/coiling the same rope/i)).toBeInTheDocument();
     expect(screen.getByText('Giovanni')).toBeInTheDocument();
     expect(screen.getByText('Camogli')).toBeInTheDocument();
   });
@@ -79,8 +82,8 @@ describe('memory detail view (#5)', () => {
       </MemoryRouter>,
     );
     // Transcript is collapsed by default; expand it first
-    await waitFor(() => screen.getByRole('button', { name: /see the full conversation/i }));
-    await user.click(screen.getByRole('button', { name: /see the full conversation/i }));
+    await waitFor(() => screen.getByRole('button', { name: /see the conversation/i }));
+    await user.click(screen.getByRole('button', { name: /see the conversation/i }));
     expect(screen.getByText(/and what did you carry with you/i)).toBeInTheDocument();
     expect(screen.getByText(/tin of amaretti/i)).toBeInTheDocument();
   });

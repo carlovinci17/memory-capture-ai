@@ -16,7 +16,7 @@ export function ProfilesScreen() {
 
   return (
     <div className="page page--wide">
-      <SectionHead eyebrow="Everyone’s stories" title="Profiles" />
+      <SectionHead eyebrow="Everyone's stories" title="Profiles" />
       <p
         style={{
           color: 'var(--ink-2)',

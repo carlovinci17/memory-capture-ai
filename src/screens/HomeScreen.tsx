@@ -47,7 +47,7 @@ export function HomeScreen({ profile }: { profile: StorytellerProfile }) {
           </h1>
           <p className="hero__sub">
             {sessions
-              ? `You’ve recorded ${sessions} session${sessions > 1 ? 's' : ''} and gathered ${memories.length} memor${memories.length === 1 ? 'y' : 'ies'} so far. ${persona.name} is ready whenever you are.`
+              ? `You've recorded ${sessions} session${sessions > 1 ? 's' : ''} and gathered ${memories.length} memor${memories.length === 1 ? 'y' : 'ies'} so far. ${persona.name} is ready whenever you are.`
               : `Sit somewhere comfortable. ${persona.name} will ask a few gentle questions, and turn your answers into a journal of your life — no typing skills required.`}
           </p>
           <div className="hero__actions">

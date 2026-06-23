@@ -197,6 +197,27 @@
   letter-spacing: -0.01em;
 }
 
+.ob-demo-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--stroke);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 22px;
+}
+.ob-demo-banner__text { flex: 1; min-width: 0; }
+.ob-demo-banner__title { font-size: 14px; font-weight: 600; color: var(--ink-1); }
+.ob-demo-banner__sub { font-size: 12.5px; color: var(--ink-3); margin-top: 2px; line-height: 1.4; }
+.ob-demo-banner__btn { flex-shrink: 0; }
+.ob-demo-banner__btn.is-loaded {
+  background: var(--surface-3, #e8f5f0);
+  color: var(--accent);
+  border-color: var(--accent);
+  pointer-events: none;
+}
+
 .ob-field {
   margin-bottom: 18px;
 }

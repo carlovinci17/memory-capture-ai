@@ -12,7 +12,7 @@ import {
 import { getRepository, type NewProfile } from '../db';
 import { seedLocalStore } from '../db/localRepository';
 import { isDemoMode } from '../demo/demoMode';
-import { getDemoStore } from '../demo/demoData';
+import { getFullDemoStore } from '../demo/demoData';
 import type { Memory, SessionResult, Store, StorytellerProfile } from '../domain/types';
 
 interface StoreContextValue {
@@ -58,9 +58,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       .then((s) => {
         if (!alive) return;
         if (isDemoMode() && s.profiles.length === 0 && import.meta.env.MODE !== 'test') {
-          // First visit in demo mode — seed Eleanor Mitchell so the app
+          // First visit in demo mode — seed both example profiles so the app
           // looks populated from the start (no onboarding required).
-          const seeded = getDemoStore();
+          const seeded = getFullDemoStore();
           seedLocalStore(seeded);
           setStore(seeded);
         } else {

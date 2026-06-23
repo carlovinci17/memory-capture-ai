@@ -57,7 +57,7 @@ describe('FallbackInterviewEngine', () => {
   });
 
   it('builds a verbatim memory card from a substantive answer', async () => {
-    const answer = 'I was born in Camogli in 1948, above my father’s net store.';
+    const answer = "I was born in Camogli in 1948, above my father's net store.";
     const r = await engine.extract(answer, []);
     expect(r.title).toBeTruthy();
     expect(r.era).toBe('1948');
