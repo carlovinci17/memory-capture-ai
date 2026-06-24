@@ -127,14 +127,11 @@ export default function App() {
             ? 'Our servers are having a moment. Your stories are safe — please try again shortly.'
             : 'This is usually a brief connection hiccup. Check your internet connection and try again.';
     return (
-      <div className="ob-stage" data-mood="terracotta" role="alert">
+      <div className="ob-stage" data-mood="terracotta" role="alert" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <WatercolorDefs />
-        <div className="ob__panel" style={{ maxWidth: 460, margin: 'auto', textAlign: 'center' }}>
+        <div className="ob__panel" style={{ maxWidth: 460, textAlign: 'center' }}>
           <h1 className="display" style={{ fontSize: 24 }}>{heading}</h1>
           <p className="ob-hint">{detail}</p>
-          <p className="ob-hint" style={{ fontFamily: 'monospace', fontSize: 12, opacity: 0.5 }}>
-            {loadError}
-          </p>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 12, flexWrap: 'wrap' }}>
             {isAuth ? (
               <a

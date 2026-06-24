@@ -1,39 +1,16 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { WatercolorDefs } from '../components/Watercolor';
 import { Icon } from '../components/Icon';
-import { isDemoMode, setRuntimeMode, verifyAdminPassword, DEMO_SESSION_KEY } from '../lib/demo/demoMode';
+import { isDemoMode, setRuntimeMode, DEMO_SESSION_KEY } from '../lib/demo/demoMode';
 import { useStore } from '../lib/store/StoreProvider';
 
 export function AdminScreen() {
   const navigate = useNavigate();
   const { resetAll } = useStore();
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [unlocked, setUnlocked] = useState(false);
-  const [error, setError] = useState(false);
-  const [checking, setChecking] = useState(false);
   const [resetting, setResetting] = useState(false);
 
-  const inputRef = useRef<HTMLInputElement>(null);
-  useEffect(() => { inputRef.current?.focus(); }, []);
-
-
   const currentMode = isDemoMode() ? 'demo' : 'production';
-
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setChecking(true);
-    setError(false);
-    const ok = await verifyAdminPassword(password);
-    setChecking(false);
-    if (ok) {
-      setUnlocked(true);
-    } else {
-      setError(true);
-      setPassword('');
-    }
-  };
 
   const resetDemo = async () => {
     setResetting(true);
@@ -50,147 +27,56 @@ export function AdminScreen() {
   return (
     <div className="ob-stage" data-mood="terracotta">
       <WatercolorDefs />
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh',
-          padding: 32,
-        }}
-      >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: 32 }}>
         <div className="ob__panel" style={{ maxWidth: 420, width: '100%' }}>
           <div className="ob__panel-head">
             <div className="eyebrow ob__panel-eyebrow">Admin</div>
             <div className="ob__panel-title">Memory Capture AI</div>
           </div>
 
-          {!unlocked ? (
-            <form onSubmit={onSubmit}>
-              <div className="ob-field">
-                <label className="ob-label" htmlFor="admin-pw">
-                  Password
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    ref={inputRef}
-                    id="admin-pw"
-                    type={showPassword ? 'text' : 'password'}
-                    className="ob-input"
-                    style={{
-                      paddingRight: 44,
-                      ...(error ? { borderColor: 'var(--error, #c0392b)' } : {}),
-                    }}
-                    value={password}
-                    onChange={(e) => { setPassword(e.target.value); setError(false); }}
-                    placeholder="Enter admin password"
-                    autoComplete="current-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    style={{
-                      position: 'absolute',
-                      right: 10,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      padding: 4,
-                      color: 'var(--ink-3)',
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Icon name={showPassword ? 'eye-off' : 'eye'} size={18} />
-                  </button>
-                </div>
-                {error && (
-                  <div className="ob-hint" style={{ color: 'var(--error, #c0392b)', marginTop: 6 }}>
-                    Incorrect password.
-                  </div>
-                )}
-              </div>
+          <div style={{ marginBottom: 24 }}>
+            <div className="eyebrow" style={{ marginBottom: 8 }}>Current mode</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span className={`mode-badge mode-badge--${currentMode}`}>
+                {currentMode === 'demo' ? 'Demo' : 'Production'}
+              </span>
+              <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>
+                {currentMode === 'demo'
+                  ? 'Data stored on this device only'
+                  : 'Data stored in Azure Cosmos DB'}
+              </span>
+            </div>
+          </div>
 
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {currentMode === 'demo' ? (
+              <button className="btn btn--primary" onClick={() => switchTo('production')} style={{ width: '100%' }}>
+                <Icon name="arrow" size={15} /> Switch to Production
+              </button>
+            ) : (
+              <button className="btn btn--ghost" onClick={() => switchTo('demo')} style={{ width: '100%' }}>
+                Switch to Demo mode
+              </button>
+            )}
+            {currentMode === 'demo' && (
               <button
-                className="btn btn--primary"
-                type="submit"
-                disabled={!password.trim() || checking}
+                className="btn btn--ghost"
+                onClick={() => void resetDemo()}
+                disabled={resetting}
                 style={{ width: '100%' }}
               >
-                {checking ? 'Checking…' : 'Unlock'}
+                <Icon name="spark" size={15} /> {resetting ? 'Resetting…' : 'Reset demo data'}
               </button>
-            </form>
-          ) : (
-            <div>
-              <div style={{ marginBottom: 24 }}>
-                <div className="eyebrow" style={{ marginBottom: 8 }}>
-                  Current mode
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span className={`mode-badge mode-badge--${currentMode}`}>
-                    {currentMode === 'demo' ? 'Demo' : 'Production'}
-                  </span>
-                  <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>
-                    {currentMode === 'demo'
-                      ? 'Data stored on this device only'
-                      : 'Data stored in Azure Cosmos DB'}
-                  </span>
-                </div>
-              </div>
+            )}
+          </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {currentMode === 'demo' ? (
-                  <button
-                    className="btn btn--primary"
-                    onClick={() => void switchTo('production')}
-                    style={{ width: '100%' }}
-                  >
-                    <Icon name="arrow" size={15} /> Switch to Production
-                  </button>
-                ) : (
-                  <button
-                    className="btn btn--ghost"
-                    onClick={() => void switchTo('demo')}
-                    style={{ width: '100%' }}
-                  >
-                    Switch to Demo mode
-                  </button>
-                )}
-                {currentMode === 'demo' && (
-                  <button
-                    className="btn btn--ghost"
-                    onClick={() => void resetDemo()}
-                    disabled={resetting}
-                    style={{ width: '100%' }}
-                  >
-                    <Icon name="spark" size={15} /> {resetting ? 'Resetting…' : 'Reset demo data'}
-                  </button>
-                )}
-                <button
-                  className="btn btn--ghost"
-                  onClick={() => setUnlocked(false)}
-                  style={{ width: '100%' }}
-                >
-                  Lock admin
-                </button>
-              </div>
-
-              <p className="ob-hint" style={{ marginTop: 18 }}>
-                Switching mode reloads the page. Demo mode stores data locally —
-                safe for public visitors. Production mode persists to Azure Cosmos DB.
-              </p>
-            </div>
-          )}
+          <p className="ob-hint" style={{ marginTop: 18 }}>
+            Switching mode reloads the page. Demo mode stores data locally —
+            safe for public visitors. Production mode persists to Azure Cosmos DB.
+          </p>
 
           <div style={{ marginTop: 20, borderTop: '1px solid var(--line, #e5e5e5)', paddingTop: 16 }}>
-            <button
-              className="btn btn--ghost"
-              onClick={() => navigate('/home')}
-              style={{ width: '100%' }}
-            >
+            <button className="btn btn--ghost" onClick={() => navigate('/home')} style={{ width: '100%' }}>
               <Icon name="arrow" size={15} style={{ transform: 'rotate(180deg)' }} /> Back to app
             </button>
           </div>

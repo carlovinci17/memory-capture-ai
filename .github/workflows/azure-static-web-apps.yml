@@ -29,7 +29,6 @@ jobs:
       - run: npm test
       - run: npm run build
         env:
-          VITE_ADMIN_PASSWORD_HASH: ${{ secrets.VITE_ADMIN_PASSWORD_HASH }}
           VITE_AI_MODE: azure
           VITE_AUTH_PROVIDER: guest
       # API quality gates (deployed as the SWA managed API)
@@ -62,7 +61,6 @@ jobs:
           api_location: 'api'
           output_location: 'dist'
         env:
-          VITE_ADMIN_PASSWORD_HASH: ${{ secrets.VITE_ADMIN_PASSWORD_HASH }}
           VITE_AI_MODE: azure
           VITE_AUTH_PROVIDER: guest
 
