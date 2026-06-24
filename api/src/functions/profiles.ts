@@ -9,11 +9,10 @@ import { badRequest, json, parseBody, upstreamError, ValidationError } from '../
 
 async function handler(req: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   if (!isCosmosConfigured()) return json(503, { error: 'db_disabled', message: 'Database not configured.' });
-  const auth = await requireApproved(req);
-  if (!('accountId' in auth)) return auth;
-  const { accountId } = auth;
-
   try {
+    const auth = await requireApproved(req);
+    if (!('accountId' in auth)) return auth;
+    const { accountId } = auth;
     const container = await getProfilesContainer();
 
     if (req.method === 'GET') {

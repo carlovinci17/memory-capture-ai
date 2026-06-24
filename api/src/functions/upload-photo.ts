@@ -14,11 +14,10 @@ const UploadRequest = z.object({
 
 async function handler(req: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   if (!isBlobConfigured()) return json(503, { error: 'blob_disabled', message: 'Blob storage not configured.' });
-  const auth = await requireApproved(req);
-  if (!('accountId' in auth)) return auth;
-  const { accountId } = auth;
-
   try {
+    const auth = await requireApproved(req);
+    if (!('accountId' in auth)) return auth;
+    const { accountId } = auth;
     const { dataUrl } = await parseBody(req, UploadRequest);
     const url = await uploadDataUrl(dataUrl, `${accountId}-${randomUUID()}`);
     return json(200, { url });

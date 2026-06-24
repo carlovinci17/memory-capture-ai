@@ -9,13 +9,12 @@ import { badRequest, json, parseBody, upstreamError, ValidationError } from '../
 
 async function handler(req: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   if (!isCosmosConfigured()) return json(503, { error: 'db_disabled', message: 'Database not configured.' });
-  const auth = await requireApproved(req);
-  if (!('accountId' in auth)) return auth;
-  const { accountId } = auth;
   const id = req.params.id;
   if (!id) return badRequest('Missing profile id.');
-
   try {
+    const auth = await requireApproved(req);
+    if (!('accountId' in auth)) return auth;
+    const { accountId } = auth;
     const container = await getProfilesContainer();
     const item = container.item(id, accountId);
 
