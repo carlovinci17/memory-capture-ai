@@ -48,7 +48,7 @@ export async function checkApproval(userId: string, email: string, name?: string
     const { resource } = await container.item(userId, userId).read<UserDoc>();
     if (resource) return resource.status;
   } catch (err) {
-    if ((err as { code?: number }).code !== 404) throw err;
+    if (Number((err as { code?: number | string }).code) !== 404) throw err;
   }
   const user: UserDoc = { id: userId, email, name, status: 'pending', createdAt: new Date().toISOString() };
   await container.items.create(user);

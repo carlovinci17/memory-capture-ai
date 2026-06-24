@@ -36,7 +36,7 @@ async function handler(req: HttpRequest, context: InvocationContext): Promise<Ht
     return json(200, { ok: true });
   } catch (err) {
     if (err instanceof ValidationError) return badRequest(err.message);
-    if ((err as { code?: number }).code === 404) return json(404, { error: 'not_found' });
+    if (Number((err as { code?: number | string }).code) === 404) return json(404, { error: 'not_found' });
     context.error('profile-by-id failed', err);
     return upstreamError('Profile store unavailable.');
   }
