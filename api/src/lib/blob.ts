@@ -1,8 +1,14 @@
 // blob.ts — upload storyteller photos to Azure Blob Storage and return a URL.
 // Keeps large images out of Cosmos documents (which have a 2MB doc limit).
+// All uploads are resized to ≤1200px and converted to WebP before storage.
 import { BlobServiceClient } from '@azure/storage-blob';
+import sharp from 'sharp';
 
 const CONTAINER = 'photos';
+const MAX_PX = 1200;
+const WEBP_QUALITY = 85;
+
+const SUPPORTED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
 let containerReady: Promise<ReturnType<BlobServiceClient['getContainerClient']>> | null = null;
 
@@ -23,29 +29,30 @@ async function getContainer() {
   return containerReady;
 }
 
-const EXT: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-  'image/gif': 'gif',
-};
+async function compress(input: Buffer): Promise<Buffer> {
+  return sharp(input)
+    .resize(MAX_PX, MAX_PX, { fit: 'inside', withoutEnlargement: true })
+    .webp({ quality: WEBP_QUALITY })
+    .toBuffer();
+}
 
 /**
  * Upload a data-URL image and return its public blob URL.
+ * Images are resized to ≤1200px and converted to WebP before storage.
  * `id` seeds a stable-ish, collision-resistant blob name.
  */
 export async function uploadDataUrl(dataUrl: string, id: string): Promise<string> {
   const match = /^data:([^;]+);base64,(.+)$/.exec(dataUrl);
   if (!match) throw new Error('Invalid data URL.');
   const contentType = match[1];
-  const ext = EXT[contentType];
-  if (!ext) throw new Error('Unsupported image type.');
-  const buffer = Buffer.from(match[2], 'base64');
-  if (buffer.byteLength > 5 * 1024 * 1024) throw new Error('Image too large (max 5MB).');
+  if (!SUPPORTED_TYPES.has(contentType)) throw new Error('Unsupported image type.');
+  const raw = Buffer.from(match[2], 'base64');
+  if (raw.byteLength > 5 * 1024 * 1024) throw new Error('Image too large (max 5MB).');
 
+  const data = await compress(raw);
   const container = await getContainer();
-  const blobName = `${id}-${buffer.byteLength.toString(36)}.${ext}`;
+  const blobName = `${id}-${data.byteLength.toString(36)}.webp`;
   const block = container.getBlockBlobClient(blobName);
-  await block.uploadData(buffer, { blobHTTPHeaders: { blobContentType: contentType } });
+  await block.uploadData(data, { blobHTTPHeaders: { blobContentType: 'image/webp' } });
   return block.url;
 }
