@@ -61,7 +61,6 @@ jobs:
           app_location: '/'
           api_location: 'api'
           output_location: 'dist'
-          skip_api_build: true
         env:
           VITE_ADMIN_PASSWORD_HASH: ${{ secrets.VITE_ADMIN_PASSWORD_HASH }}
           VITE_AI_MODE: azure
