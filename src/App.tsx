@@ -86,8 +86,13 @@ function useActiveProfile(): StorytellerProfile {
 export default function App() {
   const { ready, profiles, loadError, reload } = useStore();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  if (!ready) {
+  // Admin must always be reachable so the user can switch back to demo mode
+  // or sign in, even when the API is failing in production mode.
+  const isAdminRoute = location.pathname === '/admin';
+
+  if (!ready && !isAdminRoute) {
     return (
       <div className="ob-stage" data-mood="terracotta" aria-busy="true">
         <WatercolorDefs />
@@ -98,7 +103,7 @@ export default function App() {
     );
   }
 
-  if (loadError) {
+  if (loadError && !isAdminRoute) {
     const isAuth = /401|403|unauthorized|forbidden/i.test(loadError);
     const isServer = /5\d\d/.test(loadError);
     const heading = isAuth
