@@ -3,14 +3,15 @@
 // the partition key, so another owner's id simply isn't found.
 import { app, type HttpRequest, type HttpResponseInit, type InvocationContext } from '@azure/functions';
 import { getProfilesContainer, isCosmosConfigured } from '../lib/cosmos';
-import { getAccountId } from '../lib/account';
+import { requireApproved } from '../lib/auth';
 import { ProfileUpsert, toClientProfile, type ProfileDoc } from '../lib/profileSchemas';
 import { badRequest, json, parseBody, upstreamError, ValidationError } from '../lib/http';
 
 async function handler(req: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   if (!isCosmosConfigured()) return json(503, { error: 'db_disabled', message: 'Database not configured.' });
-  const accountId = getAccountId(req);
-  if (!accountId) return json(401, { error: 'unauthenticated', message: 'Sign in required.' });
+  const auth = await requireApproved(req);
+  if (!('accountId' in auth)) return auth;
+  const { accountId } = auth;
   const id = req.params.id;
   if (!id) return badRequest('Missing profile id.');
 
@@ -36,7 +37,6 @@ async function handler(req: HttpRequest, context: InvocationContext): Promise<Ht
     return json(200, { ok: true });
   } catch (err) {
     if (err instanceof ValidationError) return badRequest(err.message);
-    // Cosmos throws a 404 code for missing/cross-account items.
     if ((err as { code?: number }).code === 404) return json(404, { error: 'not_found' });
     context.error('profile-by-id failed', err);
     return upstreamError('Profile store unavailable.');

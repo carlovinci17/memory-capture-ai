@@ -3,14 +3,15 @@
 import { app, type HttpRequest, type HttpResponseInit, type InvocationContext } from '@azure/functions';
 import { randomUUID } from 'node:crypto';
 import { getProfilesContainer, isCosmosConfigured } from '../lib/cosmos';
-import { getAccountId } from '../lib/account';
+import { requireApproved } from '../lib/auth';
 import { ProfileUpsert, toClientProfile, type ProfileDoc } from '../lib/profileSchemas';
 import { badRequest, json, parseBody, upstreamError, ValidationError } from '../lib/http';
 
 async function handler(req: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   if (!isCosmosConfigured()) return json(503, { error: 'db_disabled', message: 'Database not configured.' });
-  const accountId = getAccountId(req);
-  if (!accountId) return json(401, { error: 'unauthenticated', message: 'Sign in required.' });
+  const auth = await requireApproved(req);
+  if (!('accountId' in auth)) return auth;
+  const { accountId } = auth;
 
   try {
     const container = await getProfilesContainer();

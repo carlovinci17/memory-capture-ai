@@ -5,18 +5,18 @@ import { app, type HttpRequest, type HttpResponseInit, type InvocationContext } 
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { isBlobConfigured, uploadDataUrl } from '../lib/blob';
-import { getAccountId } from '../lib/account';
+import { requireApproved } from '../lib/auth';
 import { badRequest, json, parseBody, upstreamError, ValidationError } from '../lib/http';
 
 const UploadRequest = z.object({
-  // ~7MB cap on the base64 string (≈5MB binary) — validated again in blob.ts.
   dataUrl: z.string().startsWith('data:').max(7_000_000),
 });
 
 async function handler(req: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   if (!isBlobConfigured()) return json(503, { error: 'blob_disabled', message: 'Blob storage not configured.' });
-  const accountId = getAccountId(req);
-  if (!accountId) return json(401, { error: 'unauthenticated', message: 'Sign in required.' });
+  const auth = await requireApproved(req);
+  if (!('accountId' in auth)) return auth;
+  const { accountId } = auth;
 
   try {
     const { dataUrl } = await parseBody(req, UploadRequest);

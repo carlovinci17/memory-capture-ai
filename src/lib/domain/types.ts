@@ -34,6 +34,8 @@ export const MemorySchema = z.object({
   summary: z.string().optional(),
   /** AI-generated watercolour image URL (Azure Blob), set asynchronously after capture. */
   imageUrl: z.string().optional(),
+  /** 400px thumbnail of the same image — used in card/list views. */
+  imageThumbnailUrl: z.string().optional(),
   /** Full conversation transcript from the session this memory was captured in. */
   transcript: z
     .array(

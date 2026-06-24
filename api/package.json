@@ -17,6 +17,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@azure/communication-email": "^1.0.0",
     "@azure/cosmos": "^4.1.1",
     "@azure/functions": "^4.5.1",
     "@azure/storage-blob": "^12.25.0",

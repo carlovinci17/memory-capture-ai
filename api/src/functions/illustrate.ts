@@ -5,7 +5,7 @@
 import { app, type HttpRequest, type HttpResponseInit, type InvocationContext } from '@azure/functions';
 import { z } from 'zod';
 import { getImageDeployment, getImageClient, isImageConfigured } from '../lib/imageClient';
-import { isBlobConfigured, uploadDataUrl } from '../lib/blob';
+import { isBlobConfigured, uploadDataUrlSizes } from '../lib/blob';
 import { badRequest, json, parseBody, upstreamError, ValidationError } from '../lib/http';
 
 const IllustrateRequest = z.object({
@@ -74,8 +74,8 @@ async function handler(req: HttpRequest, ctx: InvocationContext): Promise<HttpRe
     }
 
     const dataUrl = `data:image/png;base64,${b64}`;
-    const imageUrl = await uploadDataUrl(dataUrl, `memory-${memoryId}`);
-    return json(200, { imageUrl });
+    const { url: imageUrl, thumbnailUrl: imageThumbnailUrl } = await uploadDataUrlSizes(dataUrl, `memory-${memoryId}`);
+    return json(200, { imageUrl, imageThumbnailUrl });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     ctx.error('illustrate failed', err);

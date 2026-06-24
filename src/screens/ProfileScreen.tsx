@@ -164,7 +164,7 @@ export function ProfileScreen({ profile }: { profile: StorytellerProfile }) {
                       boxShadow: 'var(--shadow-sm)',
                     }}
                   >
-                    <MemoryArt memory={c} seed={(c.title || '').length + 3} />
+                    <MemoryArt memory={c} seed={(c.title || '').length + 3} thumbnail />
                   </div>
                   <div style={{ flex: 1 }}>
                     <div className="persona-row__name" style={{ fontSize: 16 }}>

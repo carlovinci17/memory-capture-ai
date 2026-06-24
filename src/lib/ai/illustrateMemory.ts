@@ -1,13 +1,18 @@
 // illustrateMemory.ts — fire-and-forget wrapper for POST /api/memories/illustrate.
-// Returns the Azure Blob URL of the generated image, or null on any failure
-// (DALL-E not configured, timeout, network error). Never throws.
+// Returns both image URLs on success, or null on any failure (DALL-E not configured,
+// timeout, network error). Never throws.
+export interface IllustrationResult {
+  imageUrl: string;
+  imageThumbnailUrl: string;
+}
+
 export async function illustrateMemory(payload: {
   memoryId: string;
   title: string;
   summary?: string;
   theme?: string;
   era?: string;
-}): Promise<string | null> {
+}): Promise<IllustrationResult | null> {
   try {
     const res = await fetch('/api/memories/illustrate', {
       method: 'POST',
@@ -20,9 +25,12 @@ export async function illustrateMemory(payload: {
       console.warn(`[illustrate] HTTP ${res.status}:`, body);
       return null;
     }
-    const data = (await res.json()) as { imageUrl?: string };
-    if (!data.imageUrl) console.warn('[illustrate] response missing imageUrl', data);
-    return data.imageUrl?.trim() || null;
+    const data = (await res.json()) as { imageUrl?: string; imageThumbnailUrl?: string };
+    if (!data.imageUrl || !data.imageThumbnailUrl) {
+      console.warn('[illustrate] response missing image URLs', data);
+      return null;
+    }
+    return { imageUrl: data.imageUrl.trim(), imageThumbnailUrl: data.imageThumbnailUrl.trim() };
   } catch (err) {
     console.warn('[illustrate] fetch failed:', err);
     return null;

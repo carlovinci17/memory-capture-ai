@@ -9,7 +9,7 @@ vi.mock('@azure/functions', () => ({
   },
 }));
 
-// Fake Cosmos container.
+// Fake Cosmos containers.
 const created: unknown[] = [];
 const fakeContainer = {
   items: {
@@ -26,9 +26,13 @@ const fakeContainer = {
     },
   },
 };
+const fakeUsersContainer = {
+  item: () => ({ read: async () => ({ resource: { id: 'guest', email: '', status: 'approved' } }) }),
+};
 vi.mock('./../lib/cosmos', () => ({
   isCosmosConfigured: () => true,
   getProfilesContainer: async () => fakeContainer,
+  getUsersContainer: async () => fakeUsersContainer,
 }));
 
 const ctx = { error: () => {} };

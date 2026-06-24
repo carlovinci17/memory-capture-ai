@@ -573,13 +573,14 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
           summary: card.summary,
           theme: card.theme,
           era: card.era,
-        }).then((imageUrl) => {
+        }).then((result) => {
           setIllustratingIds((prev) => { const s = new Set(prev); s.delete(card.id); return s; });
-          if (!imageUrl) return;
+          if (!result) return;
+          const { imageUrl, imageThumbnailUrl } = result;
           if (mountedRef.current) {
-            setMemories((prev) => prev.map((m) => m.id === card.id ? { ...m, imageUrl } : m));
+            setMemories((prev) => prev.map((m) => m.id === card.id ? { ...m, imageUrl, imageThumbnailUrl } : m));
           }
-          void updateMemory(profile.id, card.id, { imageUrl });
+          void updateMemory(profile.id, card.id, { imageUrl, imageThumbnailUrl });
         });
       }
       addNoticed([
@@ -1101,8 +1102,8 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
         {newest && (
           <div className="xcard">
             <div className="xmem__art">
-              <MemoryArt memory={newest} seed={memories.length + 4} />
-              {illustratingIds.has(newest.id) && !newest.imageUrl && (
+              <MemoryArt memory={newest} seed={memories.length + 4} thumbnail />
+              {illustratingIds.has(newest.id) && !newest.imageThumbnailUrl && !newest.imageUrl && (
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', background: 'rgba(0,0,0,0.18)' }}>
                   <span className="painting-indicator">
                     <svg className="painting-indicator__icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

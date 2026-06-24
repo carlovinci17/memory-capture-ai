@@ -4,8 +4,9 @@
     "exclude": ["/api/*", "/assets/*", "/*.{css,js,png,jpg,svg,ico,woff,woff2}"]
   },
   "routes": [
-    { "route": "/login", "rewrite": "/.auth/login/github" },
+    { "route": "/login", "rewrite": "/.auth/login/google" },
     { "route": "/logout", "rewrite": "/.auth/logout" },
+    { "route": "/.auth/login/github", "statusCode": 404 },
     { "route": "/.auth/login/aad", "statusCode": 404 },
     { "route": "/.auth/login/twitter", "statusCode": 404 },
     { "route": "/api/*", "allowedRoles": ["authenticated", "anonymous"] }

@@ -104,18 +104,28 @@ export default function App() {
   }
 
   if (loadError && !isAdminRoute) {
-    const isAuth = /401|403|unauthorized|forbidden/i.test(loadError);
+    const isPending = /pending.?approval/i.test(loadError);
+    const isDenied = /not.?approved|access.?denied/i.test(loadError);
+    const isAuth = !isPending && !isDenied && /401|403|unauthorized|forbidden/i.test(loadError);
     const isServer = /5\d\d/.test(loadError);
-    const heading = isAuth
-      ? 'Sign-in required'
-      : isServer
-        ? 'Service temporarily unavailable'
-        : "We couldn't reach your journal";
-    const detail = isAuth
-      ? 'Your session may have expired. Sign out and sign back in to continue.'
-      : isServer
-        ? 'Our servers are having a moment. Your stories are safe — please try again shortly.'
-        : 'This is usually a brief connection hiccup. Check your internet connection and try again.';
+    const heading = isPending
+      ? 'Awaiting approval'
+      : isDenied
+        ? 'Access not approved'
+        : isAuth
+          ? 'Sign-in required'
+          : isServer
+            ? 'Service temporarily unavailable'
+            : "We couldn't reach your journal";
+    const detail = isPending
+      ? "You're in the queue. You'll receive an email once your account is approved."
+      : isDenied
+        ? 'Your sign-up request was not approved. Contact the app owner for access.'
+        : isAuth
+          ? 'Sign in with your Google account to continue.'
+          : isServer
+            ? 'Our servers are having a moment. Your stories are safe — please try again shortly.'
+            : 'This is usually a brief connection hiccup. Check your internet connection and try again.';
     return (
       <div className="ob-stage" data-mood="terracotta" role="alert">
         <WatercolorDefs />
@@ -129,15 +139,17 @@ export default function App() {
             {isAuth ? (
               <a
                 className="btn btn--primary"
-                href={`/.auth/login/github?post_login_redirect_uri=${encodeURIComponent(window.location.pathname)}`}
+                href={`/.auth/login/google?post_login_redirect_uri=${encodeURIComponent(window.location.pathname)}`}
               >
-                Sign in with GitHub
+                Sign in with Google
               </a>
-            ) : (
+            ) : isPending ? (
+              <a className="btn btn--ghost" href="/.auth/logout">Sign out</a>
+            ) : !isDenied ? (
               <button className="btn btn--primary" onClick={reload}>
                 <Icon name="arrow" size={16} /> Try again
               </button>
-            )}
+            ) : null}
             <button className="btn btn--ghost" onClick={() => navigate('/admin')}>
               Admin
             </button>

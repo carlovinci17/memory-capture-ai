@@ -8,13 +8,19 @@ interface MemoryArtProps {
   memory: Memory;
   /** Seed for the SVG fallback — keeps it stable across renders. */
   seed?: number;
+  /** Use the 400px thumbnail instead of the 1200px full image. For card/list views. */
+  thumbnail?: boolean;
 }
 
-export function MemoryArt({ memory, seed }: MemoryArtProps) {
-  if (memory.imageUrl) {
+export function MemoryArt({ memory, seed, thumbnail }: MemoryArtProps) {
+  const src = thumbnail
+    ? (memory.imageThumbnailUrl ?? memory.imageUrl)
+    : (memory.imageUrl ?? memory.imageThumbnailUrl);
+
+  if (src) {
     return (
       <img
-        src={memory.imageUrl}
+        src={src}
         alt=""
         draggable={false}
         style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}

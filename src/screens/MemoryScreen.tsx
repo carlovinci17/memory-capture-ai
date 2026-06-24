@@ -118,14 +118,14 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
   const generateImage = async () => {
     if (!memory || generatingImage) return;
     setGeneratingImage(true);
-    const imageUrl = await illustrateMemory({
+    const result = await illustrateMemory({
       memoryId: memory.id,
       title: memory.title,
       summary: memory.summary,
       theme: memory.theme,
       era: memory.era,
     });
-    if (imageUrl) await updateMemory(profile.id, memory.id, { imageUrl });
+    if (result) await updateMemory(profile.id, memory.id, result);
     setGeneratingImage(false);
   };
 

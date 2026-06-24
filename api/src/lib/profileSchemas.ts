@@ -8,6 +8,7 @@ const Memory = z.object({
   excerpt: z.string(),
   summary: z.string().optional(),
   imageUrl: z.string().optional(),
+  imageThumbnailUrl: z.string().optional(),
   era: z.string().optional(),
   theme: z.string().optional(),
   palette: z.array(z.string()),
