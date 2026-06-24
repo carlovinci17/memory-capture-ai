@@ -5,7 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { getProfilesContainer, isCosmosConfigured } from '../lib/cosmos';
 import { requireApproved } from '../lib/auth';
 import { ProfileUpsert, toClientProfile, type ProfileDoc } from '../lib/profileSchemas';
-import { badRequest, json, parseBody, ValidationError } from '../lib/http';
+import { badRequest, json, parseBody, upstreamError, ValidationError } from '../lib/http';
 
 async function handler(req: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   if (!isCosmosConfigured()) return json(503, { error: 'db_disabled', message: 'Database not configured.' });
@@ -33,8 +33,7 @@ async function handler(req: HttpRequest, context: InvocationContext): Promise<Ht
   } catch (err) {
     if (err instanceof ValidationError) return badRequest(err.message);
     context.error('profiles failed', err);
-    const e = err as { code?: unknown; statusCode?: unknown; message?: string };
-    return json(502, { error: 'upstream_error', debug: `code=${e.code} statusCode=${e.statusCode} msg=${e.message}` });
+    return upstreamError('Profile store unavailable.');
   }
 }
 

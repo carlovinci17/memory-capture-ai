@@ -79,7 +79,8 @@ export function getFullDemoStore(activeId: string = DEMO_ID_THOMAS): Store {
         memories: [
           {
             id: 'demo-thomas-mem-1',
-            imageUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-thomas-mem-1-11gf9.png',
+            imageUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-thomas-mem-1.webp',
+            imageThumbnailUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-thomas-mem-1-thumb.webp',
             title: 'A Classroom of Thirty',
             era: '1970s',
             theme: 'Work',
@@ -103,7 +104,8 @@ export function getFullDemoStore(activeId: string = DEMO_ID_THOMAS): Store {
           },
           {
             id: 'demo-thomas-mem-2',
-            imageUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-thomas-mem-2-10tqe.png',
+            imageUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-thomas-mem-2.webp',
+            imageThumbnailUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-thomas-mem-2-thumb.webp',
             title: 'The First Tomatoes',
             era: '1980s',
             theme: 'Family',
@@ -141,7 +143,8 @@ export function getFullDemoStore(activeId: string = DEMO_ID_THOMAS): Store {
         memories: [
           {
             id: 'demo-mem-1',
-            imageUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-mem-1-134f6.png',
+            imageUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-mem-1.webp',
+            imageThumbnailUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-mem-1-thumb.webp',
             title: 'The Jam Season',
             era: '1950s',
             theme: 'Family',
@@ -165,7 +168,8 @@ export function getFullDemoStore(activeId: string = DEMO_ID_THOMAS): Store {
           },
           {
             id: 'demo-mem-2',
-            imageUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-mem-2-12brb.png',
+            imageUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-mem-2.webp',
+            imageThumbnailUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-mem-2-thumb.webp',
             title: 'First Day at Myer',
             era: '1961',
             theme: 'Work',
@@ -189,7 +193,8 @@ export function getFullDemoStore(activeId: string = DEMO_ID_THOMAS): Store {
           },
           {
             id: 'demo-mem-3',
-            imageUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-mem-3-13n0u.png',
+            imageUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-mem-3.webp',
+            imageThumbnailUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-mem-3-thumb.webp',
             title: 'Meeting Gerald',
             era: '1965',
             theme: 'Love',
@@ -227,7 +232,8 @@ export function getFullDemoStore(activeId: string = DEMO_ID_THOMAS): Store {
         memories: [
           {
             id: 'demo-yuki-mem-1',
-            imageUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-yuki-mem-1-15y7q.png',
+            imageUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-yuki-mem-1.webp',
+            imageThumbnailUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-yuki-mem-1-thumb.webp',
             title: "Mother's Ikebana Studio",
             era: '1960s',
             theme: 'Family',
@@ -251,7 +257,8 @@ export function getFullDemoStore(activeId: string = DEMO_ID_THOMAS): Store {
           },
           {
             id: 'demo-yuki-mem-2',
-            imageUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-yuki-mem-2-12gez.png',
+            imageUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-yuki-mem-2.webp',
+            imageThumbnailUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-yuki-mem-2-thumb.webp',
             title: 'First Melbourne Winter',
             era: '1970s',
             theme: 'Migration',
@@ -289,7 +296,8 @@ export function getFullDemoStore(activeId: string = DEMO_ID_THOMAS): Store {
         memories: [
           {
             id: 'demo-kofi-mem-1',
-            imageUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-kofi-mem-1-137uo.png',
+            imageUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-kofi-mem-1.webp',
+            imageThumbnailUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-kofi-mem-1-thumb.webp',
             title: 'The Market Before Sunrise',
             era: '1980s',
             theme: 'Family',
@@ -313,7 +321,8 @@ export function getFullDemoStore(activeId: string = DEMO_ID_THOMAS): Store {
           },
           {
             id: 'demo-kofi-mem-2',
-            imageUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-kofi-mem-2-134s5.png',
+            imageUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-kofi-mem-2.webp',
+            imageThumbnailUrl: 'https://memorycapturestore.blob.core.windows.net/photos/memory-demo-kofi-mem-2-thumb.webp',
             title: "Father's Red Pen",
             era: '1990s',
             theme: 'Education',
