@@ -33,7 +33,8 @@ async function handler(req: HttpRequest, context: InvocationContext): Promise<Ht
   } catch (err) {
     if (err instanceof ValidationError) return badRequest(err.message);
     context.error('profiles failed', err);
-    return upstreamError('Profile store unavailable.');
+    const e = err as { code?: unknown; statusCode?: unknown; message?: string };
+    return json(502, { error: 'upstream_error', debug: `code=${e.code} statusCode=${e.statusCode} msg=${e.message}` });
   }
 }
 
