@@ -119,9 +119,9 @@ export default function App() {
 
   if (!ready && !isAdminRoute) {
     return (
-      <div className="ob-stage" data-mood="terracotta" aria-busy="true">
+      <div className="ob-stage" data-mood="terracotta" aria-busy="true" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <WatercolorDefs />
-        <p className="ob-hint" style={{ margin: 32 }}>
+        <p style={{ fontSize: 22, color: 'var(--ink-3)', fontFamily: 'var(--font-serif, Georgia, serif)', fontStyle: 'italic' }}>
           Gathering your journal…
         </p>
       </div>
