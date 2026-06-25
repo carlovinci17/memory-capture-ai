@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { WatercolorDefs } from '../components/Watercolor';
 import { Icon } from '../components/Icon';
@@ -29,6 +29,16 @@ export function AdminScreen() {
   const [checking, setChecking] = useState(false);
 
   const currentMode = isDemoMode() ? 'demo' : 'production';
+  const [googleUser, setGoogleUser] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/.auth/me')
+      .then((r) => r.json())
+      .then((d: { clientPrincipal?: { userDetails?: string } | null }) => {
+        setGoogleUser(d?.clientPrincipal?.userDetails ?? null);
+      })
+      .catch(() => {});
+  }, []);
 
   const submitPassword = async () => {
     if (!pw || checking) return;
@@ -144,7 +154,27 @@ export function AdminScreen() {
             safe for public visitors. Production mode persists to Azure Cosmos DB.
           </p>
 
-          <div style={{ marginTop: 20, borderTop: '1px solid var(--line, #e5e5e5)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ marginTop: 20, borderTop: '1px solid var(--line, #e5e5e5)', paddingTop: 16, marginBottom: 16 }}>
+            <div className="eyebrow" style={{ marginBottom: 8 }}>Google session</div>
+            {googleUser ? (
+              <>
+                <p style={{ fontSize: 13, color: 'var(--ink-2)', marginBottom: 10 }}>
+                  Signed in as <strong>{googleUser}</strong>
+                </p>
+                <button
+                  className="btn btn--ghost"
+                  onClick={() => { window.location.href = '/.auth/logout?post_logout_redirect_uri=/'; }}
+                  style={{ width: '100%' }}
+                >
+                  Sign out of Google
+                </button>
+              </>
+            ) : (
+              <p style={{ fontSize: 13, color: 'var(--ink-4)' }}>No active Google session.</p>
+            )}
+          </div>
+
+          <div style={{ borderTop: '1px solid var(--line, #e5e5e5)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <button className="btn btn--ghost" onClick={() => navigate('/home')} style={{ width: '100%' }}>
               <Icon name="arrow" size={15} style={{ transform: 'rotate(180deg)' }} /> Back to app
             </button>
