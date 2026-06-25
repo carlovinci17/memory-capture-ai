@@ -5,10 +5,10 @@ import { BlobServiceClient } from '@azure/storage-blob';
 import sharp from 'sharp';
 
 const CONTAINER = 'photos';
-const THUMB_PX = 400;
-const THUMB_QUALITY = 72;
-const FULL_PX = 1200;
-const FULL_QUALITY = 85;
+const THUMB_PX = 200;
+const THUMB_QUALITY = 65;
+const FULL_PX = 800;
+const FULL_QUALITY = 75;
 
 const SUPPORTED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 

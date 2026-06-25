@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { Icon, type IconName } from './Icon';
 import { A11yMenu } from './A11yMenu';
 import { useAuth } from '../lib/auth/auth';
-import { isAdminAuthenticated } from '../lib/demo/demoMode';
+import { isAdminAuthenticated, getRuntimeMode } from '../lib/demo/demoMode';
 
 const ITEMS: { to: string; label: string; icon: IconName }[] = [
   { to: '/home', label: 'Home', icon: 'home' },
@@ -72,12 +72,17 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         >
           <Icon name="lock" className="nav__icon" />
           <span>Admin</span>
+          <Icon name="arrow" size={11} style={{ marginLeft: 'auto', color: 'var(--accent)', transform: 'rotate(-45deg)' }} />
         </NavLink>
       )}
-      {mode === 'swa' && (
-        <button className="nav__item" onClick={logout} style={{ margin: '0 8px 8px' }}>
+      {getRuntimeMode() === 'production' && (
+        <button
+          className="nav__item"
+          onClick={() => { window.location.href = '/.auth/logout?post_logout_redirect_uri=/'; }}
+          style={{ margin: '0 8px 8px' }}
+        >
           <Icon name="pause" className="nav__icon" />
-          <span>Sign out{user?.name ? ` · ${user.name}` : ''}</span>
+          <span>Sign out</span>
         </button>
       )}
       <footer className="sidebar__footer">

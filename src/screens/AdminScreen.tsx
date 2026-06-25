@@ -51,6 +51,7 @@ export function AdminScreen() {
 
   const signOutAdmin = () => {
     clearAdminAuthenticated();
+    setAuthed(false);
     navigate('/home');
   };
 

@@ -31,6 +31,7 @@ jobs:
         env:
           VITE_AI_MODE: azure
           VITE_AUTH_PROVIDER: guest
+          VITE_ADMIN_PASSWORD_HASH: ${{ secrets.VITE_ADMIN_PASSWORD_HASH }}
       # API quality gates (deployed as the SWA managed API)
       - run: npm ci --prefix api
       - run: npm run build --prefix api
@@ -63,6 +64,7 @@ jobs:
         env:
           VITE_AI_MODE: azure
           VITE_AUTH_PROVIDER: guest
+          VITE_ADMIN_PASSWORD_HASH: ${{ secrets.VITE_ADMIN_PASSWORD_HASH }}
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
