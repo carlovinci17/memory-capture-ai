@@ -73,6 +73,7 @@ export function AdminScreen() {
                 onChange={(e) => { setPw(e.target.value); setPwError(false); }}
                 onKeyDown={(e) => e.key === 'Enter' && void submitPassword()}
                 placeholder="Admin password"
+                // eslint-disable-next-line jsx-a11y/no-autofocus
                 autoFocus
               />
               {pwError && (
