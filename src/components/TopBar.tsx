@@ -1,10 +1,9 @@
 // TopBar.tsx — screen title + profile switcher dropdown (switch / view / add).
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Icon } from './Icon';
 import { Avatar } from './Avatar';
 import { useStore } from '../lib/store/StoreProvider';
-import { isDemoMode, DEMO_SESSION_KEY } from '../lib/demo/demoMode';
 import type { StorytellerProfile } from '../lib/domain/types';
 
 interface TopBarProps {
@@ -14,15 +13,8 @@ interface TopBarProps {
 }
 
 export function TopBar({ eyebrow, title, profile }: TopBarProps) {
-  const { profiles, switchProfile, resetAll } = useStore();
+  const { profiles, switchProfile } = useStore();
   const navigate = useNavigate();
-
-  const clearData = async () => {
-    if (!window.confirm('Clear all your demo data? This removes all storytellers and memories from this device.')) return;
-    localStorage.removeItem(DEMO_SESSION_KEY);
-    await resetAll();
-    navigate('/onboarding');
-  };
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -46,18 +38,6 @@ export function TopBar({ eyebrow, title, profile }: TopBarProps) {
 
   return (
     <>
-    {isDemoMode() && (
-      <div className="demo-banner">
-        <span className="demo-banner__label">Demo mode active</span>
-        <span className="demo-banner__note">
-          Your data stays on this device only · AI processing via Azure (Microsoft)
-          {' · '}<Link to="/privacy" className="demo-banner__link">How this works</Link>
-        </span>
-        <button className="demo-banner__clear" onClick={() => void clearData()}>
-          Clear my data
-        </button>
-      </div>
-    )}
     <div className="topbar">
       <div>
         <div className="topbar__eyebrow">{eyebrow}</div>

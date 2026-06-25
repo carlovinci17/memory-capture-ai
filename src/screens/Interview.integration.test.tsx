@@ -16,6 +16,8 @@ function renderApp() {
 }
 
 async function createProfile(user: ReturnType<typeof userEvent.setup>) {
+  await waitFor(() => screen.getByRole('button', { name: /try for free/i }));
+  await user.click(screen.getByRole('button', { name: /try for free/i }));
   await waitFor(() => screen.getByLabelText('Your name'));
   await user.type(screen.getByLabelText('Your name'), 'Eleanor Marchetti');
   await user.click(screen.getByRole('button', { name: /create my journal/i }));

@@ -7,6 +7,7 @@ import { WatercolorDefs } from './components/Watercolor';
 import { Icon } from './components/Icon';
 import { useStore } from './lib/store/StoreProvider';
 import { todayLabel } from './lib/format';
+import { isDemoMode, setRuntimeMode } from './lib/demo/demoMode';
 import { OnboardingScreen } from './screens/OnboardingScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { InterviewScreen } from './screens/InterviewScreen';
@@ -28,7 +29,7 @@ function meta(pathname: string, profile: StorytellerProfile): { eyebrow: string;
 
 /** Shell with sidebar + top bar; redirects to onboarding when no profile exists. */
 function AppLayout() {
-  const { activeProfile } = useStore();
+  const { activeProfile, resetAll } = useStore();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem('mcap_sidebar_collapsed') === '1',
@@ -45,6 +46,17 @@ function AppLayout() {
   if (!activeProfile) return <Navigate to="/onboarding" replace />;
 
   const { eyebrow, title } = meta(location.pathname, activeProfile);
+
+  const inDemoMode = isDemoMode();
+  const goFullAccess = () => {
+    setRuntimeMode('production');
+    window.location.href = '/.auth/login/google?post_login_redirect_uri=/home';
+  };
+  const clearDemoData = async () => {
+    localStorage.removeItem('mcap_demo_sessions_v1');
+    await resetAll();
+    window.location.reload();
+  };
 
   return (
     <div
@@ -69,6 +81,19 @@ function AppLayout() {
         </button>
       )}
       <main className="main" id="main">
+        {inDemoMode && (
+          <div className="demo-banner">
+            <span className="demo-banner__label">Demo mode active</span>
+            <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+              <button className="demo-banner__clear" onClick={() => void clearDemoData()}>
+                Clear my data
+              </button>
+              <button className="demo-banner__clear" onClick={goFullAccess}>
+                Get full access
+              </button>
+            </div>
+          </div>
+        )}
         <TopBar eyebrow={eyebrow} title={title} profile={activeProfile} />
         <Outlet context={activeProfile} />
       </main>

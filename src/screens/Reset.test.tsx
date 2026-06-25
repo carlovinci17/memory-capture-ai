@@ -36,8 +36,8 @@ describe('Reset demo data', () => {
     await waitFor(() => screen.getByRole('button', { name: /clear my data/i }));
     await user.click(screen.getByRole('button', { name: /clear my data/i }));
 
-    // Lands back on the first-run onboarding form.
-    await waitFor(() => expect(screen.getByLabelText('Your name')).toBeInTheDocument());
+    // Lands back on the onboarding choice screen.
+    await waitFor(() => expect(screen.getByRole('button', { name: /try for free/i })).toBeInTheDocument());
     const raw = JSON.parse(localStorage.getItem('mcap_mvp_store_v1') || '{}');
     expect(raw.profiles).toHaveLength(0);
   });

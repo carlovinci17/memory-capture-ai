@@ -37,7 +37,7 @@ beforeEach(() => localStorage.clear());
 describe('accessibility (axe)', () => {
   it('onboarding has no violations', async () => {
     const { container } = renderRoute('/onboarding');
-    await waitFor(() => screen.getByLabelText('Your name'));
+    await waitFor(() => screen.getByRole('button', { name: /try for free/i }));
     expect(await axe(container)).toHaveNoViolations();
   });
 

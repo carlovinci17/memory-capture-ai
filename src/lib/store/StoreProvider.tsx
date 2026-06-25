@@ -11,7 +11,6 @@ import {
 } from 'react';
 import { getRepository, type NewProfile } from '../db';
 import { seedLocalStore } from '../db/localRepository';
-import { isDemoMode } from '../demo/demoMode';
 import { getFullDemoStore } from '../demo/demoData';
 import type { Memory, SessionResult, Store, StorytellerProfile } from '../domain/types';
 
@@ -32,6 +31,10 @@ interface StoreContextValue {
   updateMemory(profileId: string, memoryId: string, patch: Partial<Memory>): Promise<void>;
   /** Delete every storyteller (and their memories) for a fresh start. */
   resetAll(): Promise<void>;
+  /** Seed the demo store combined with the given user profile — for first demo visit. */
+  initDemoStore(userProfile: StorytellerProfile): void;
+  /** Load demo profiles without creating a user profile — skip onboarding. */
+  skipToDemo(): void;
   /** Set when the initial load failed — contains the error message, null when ok. */
   loadError: string | null;
   /** Retry the initial load. */
@@ -57,15 +60,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       .load()
       .then((s) => {
         if (!alive) return;
-        if (isDemoMode() && s.profiles.length === 0 && import.meta.env.MODE !== 'test') {
-          // First visit in demo mode — seed both example profiles so the app
-          // looks populated from the start (no onboarding required).
-          const seeded = getFullDemoStore();
-          seedLocalStore(seeded);
-          setStore(seeded);
-        } else {
-          setStore(s);
-        }
+        setStore(s);
         setReady(true);
       })
       .catch((err: unknown) => {
@@ -175,6 +170,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setStore({ profiles: [], activeId: null });
   }, [repo, store.profiles]);
 
+  const initDemoStore = useCallback((userProfile: StorytellerProfile) => {
+    const demoStore = getFullDemoStore();
+    const combined = { profiles: [userProfile, ...demoStore.profiles], activeId: userProfile.id };
+    seedLocalStore(combined);
+    setStore(combined);
+  }, []);
+
+  const skipToDemo = useCallback(() => {
+    const demoStore = getFullDemoStore();
+    seedLocalStore(demoStore);
+    setStore(demoStore);
+  }, []);
+
   const activeProfile =
     store.profiles.find((p) => p.id === store.activeId) || store.profiles[0] || null;
 
@@ -192,6 +200,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     deleteMemory,
     updateMemory,
     resetAll,
+    initDemoStore,
+    skipToDemo,
     loadError,
     reload,
   };

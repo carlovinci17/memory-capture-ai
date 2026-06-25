@@ -22,6 +22,10 @@ describe('Onboarding → Home flow', () => {
     const user = userEvent.setup();
     renderApp();
 
+    // Choice step is shown first on a fresh demo visit.
+    await waitFor(() => screen.getByRole('button', { name: /try for free/i }));
+    await user.click(screen.getByRole('button', { name: /try for free/i }));
+
     await waitFor(() => screen.getByLabelText('Your name'));
     await user.type(screen.getByLabelText('Your name'), 'Eleanor Marchetti');
     await user.click(screen.getByRole('button', { name: /create my journal/i }));
@@ -32,9 +36,8 @@ describe('Onboarding → Home flow', () => {
     );
     expect(screen.getAllByText(/Eleanor/).length).toBeGreaterThan(0);
 
-    // And it persisted to the repository.
+    // User's profile is first; demo profiles are also seeded.
     const raw = JSON.parse(localStorage.getItem('mcap_mvp_store_v1') || '{}');
-    expect(raw.profiles).toHaveLength(1);
     expect(raw.profiles[0].name).toBe('Eleanor Marchetti');
   });
 });

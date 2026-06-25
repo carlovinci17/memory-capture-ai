@@ -20,7 +20,6 @@ import {
   stopSpeaking,
   type Recognition,
 } from '../lib/speech/speechService';
-import { isDemoMode } from '../lib/demo/demoMode';
 import type {
   ExtractedEntity,
   Memory,
@@ -267,9 +266,6 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   const [aiSpeaking, setAiSpeaking] = useState(false);
   const [waveData, setWaveData] = useState<number[]>([]);
   const [paused, setPaused] = useState(false);
-  const [demoTimeUp, setDemoTimeUp] = useState(false);
-  const [demoSecondsLeft, setDemoSecondsLeft] = useState(120);
-
   // Voice (Azure AI Speech) — optional enhancement; typing always works.
   const [voiceAvailable, setVoiceAvailable] = useState(false);
   // Always start with TTS off so the TTS effect doesn't auto-fire before the user
@@ -312,25 +308,6 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
     // scrollTo is unimplemented in jsdom; guard so tests and SSR stay happy.
     el?.scrollTo?.({ top: el.scrollHeight, behavior: 'smooth' });
   }, [messages, thinking, suggestions, streamingText]);
-
-  // Demo mode: 2-minute interview time limit.
-  useEffect(() => {
-    if (!isDemoMode()) return;
-    const id = setTimeout(() => setDemoTimeUp(true), 2 * 60 * 1000);
-    return () => clearTimeout(id);
-  }, []);
-
-  // Demo mode: live countdown ticker.
-  useEffect(() => {
-    if (!isDemoMode()) return;
-    const id = setInterval(() => {
-      setDemoSecondsLeft((s) => {
-        if (s <= 1) { clearInterval(id); return 0; }
-        return s - 1;
-      });
-    }, 1000);
-    return () => clearInterval(id);
-  }, []);
 
   // Keep refs of fast-changing state so async callbacks read current values.
   useEffect(() => {
@@ -771,30 +748,6 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
 
   const newest = memories[memories.length - 1];
 
-  if (demoTimeUp) {
-    return (
-      <div className="page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-        <div className="panel rise" style={{ maxWidth: 520, textAlign: 'center', padding: '40px 44px' }}>
-          <div style={{ fontSize: 34, marginBottom: 16 }}>✦</div>
-          <h2 className="display" style={{ fontSize: 26, marginBottom: 12 }}>
-            Your demo session is complete
-          </h2>
-          <p style={{ color: 'var(--ink-2)', lineHeight: 1.6, marginBottom: 28 }}>
-            You've had a full 2-minute taste of Memory Capture AI. Your captured memories are saved — head home to explore them, or clear your data to start fresh.
-          </p>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn--primary" onClick={() => navigate('/home')}>
-              <Icon name="home" size={15} /> View memories
-            </button>
-            <button className="btn btn--ghost" onClick={() => navigate('/admin')}>
-              Admin panel
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="iv">
       {/* stage */}
@@ -827,12 +780,6 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
           <div className="iv__status">
             <span className="dot" /> {statusText}
           </div>
-          {isDemoMode() && (
-            <div className={'demo-countdown' + (demoSecondsLeft <= 30 ? ' demo-countdown--urgent' : '')}>
-              {String(Math.floor(demoSecondsLeft / 60)).padStart(2, '0')}:
-              {String(demoSecondsLeft % 60).padStart(2, '0')} remaining
-            </div>
-          )}
           <div className="iv__interviewer">
             <button
               className="iv__interviewer-btn"

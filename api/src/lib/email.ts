@@ -11,6 +11,13 @@ export async function sendEmail(opts: EmailOptions): Promise<void> {
     console.warn('[email] ACS_CONNECTION_STRING or NOTIFY_FROM_EMAIL not set — skipping notification');
     return;
   }
-  // TODO: restore ACS EmailClient once startup issue is resolved
-  console.log('[email] Would send to', opts.to, ':', opts.subject);
+  // Lazy import avoids loading the ACS SDK at startup (previously caused Functions crash).
+  const { EmailClient } = await import('@azure/communication-email');
+  const client = new EmailClient(connString);
+  const poller = await client.beginSend({
+    senderAddress: from,
+    content: { subject: opts.subject, html: opts.html },
+    recipients: { to: [{ address: opts.to }] },
+  });
+  await poller.pollUntilDone();
 }

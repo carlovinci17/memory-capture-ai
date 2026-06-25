@@ -217,6 +217,66 @@
   border-color: var(--accent);
 }
 
+/* ── First-visit two-path welcome ──────────────────────────────── */
+.ob-path-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--stroke);
+  border-radius: 10px;
+  padding: 18px 16px 14px;
+  margin-bottom: 24px;
+}
+.ob-path-choice__or {
+  font-size: 12px;
+  color: var(--ink-4);
+  text-align: center;
+  padding: 2px 0;
+}
+.ob-path-choice__hint {
+  font-size: 12px;
+  color: var(--ink-4);
+  line-height: 1.5;
+  margin: 2px 0 0;
+  text-align: center;
+}
+.ob-path-choice__divider {
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--stroke);
+  font-size: 12px;
+  color: var(--ink-4);
+  text-align: center;
+}
+
+/* ── Onboarding footer ─────────────────────────────────────────── */
+.ob-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 40px;
+  font-size: 12px;
+  color: var(--ink-4);
+  gap: 16px;
+  pointer-events: none;
+}
+.ob-footer > * { pointer-events: auto; }
+@media (max-width: 900px) {
+  .ob-footer { padding: 10px 26px; }
+}
+.ob-footer__link {
+  color: var(--ink-4);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.ob-footer__link:hover { color: var(--ink-2); }
+
 .ob-field {
   margin-bottom: 18px;
 }
