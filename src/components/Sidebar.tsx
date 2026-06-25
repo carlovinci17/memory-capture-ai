@@ -2,7 +2,6 @@
 import { NavLink } from 'react-router-dom';
 import { Icon, type IconName } from './Icon';
 import { A11yMenu } from './A11yMenu';
-import { useAuth } from '../lib/auth/auth';
 import { isAdminAuthenticated, getRuntimeMode } from '../lib/demo/demoMode';
 
 const ITEMS: { to: string; label: string; icon: IconName }[] = [
@@ -17,8 +16,6 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
-  const { mode, user, logout } = useAuth();
-
   return (
     <aside className="sidebar">
       <div className="brand">
