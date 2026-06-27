@@ -166,15 +166,20 @@ export default function App() {
                 Sign in with Google
               </a>
             ) : isPending ? (
-              <a className="btn btn--ghost" href="/.auth/logout">Sign out</a>
+              <button
+                className="btn btn--ghost"
+                onClick={async () => {
+                  await fetch('/api/users/cancel', { method: 'POST' }).catch(() => {});
+                  window.location.href = '/.auth/logout?post_logout_redirect_uri=/';
+                }}
+              >
+                Cancel request
+              </button>
             ) : !isDenied ? (
               <button className="btn btn--primary" onClick={reload}>
                 <Icon name="arrow" size={16} /> Try again
               </button>
             ) : null}
-            <button className="btn btn--ghost" onClick={() => navigate('/admin')}>
-              Admin
-            </button>
           </div>
         </div>
       </div>
