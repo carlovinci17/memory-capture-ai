@@ -1,5 +1,5 @@
 // App.tsx — routing + app shell. Guest/local mode; cloud auth lands in M9.
-import { Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
@@ -110,7 +110,6 @@ function useActiveProfile(): StorytellerProfile {
 
 export default function App() {
   const { ready, profiles, loadError, reload } = useStore();
-  const navigate = useNavigate();
   const location = useLocation();
 
   // Admin must always be reachable so the user can switch back to demo mode
