@@ -813,6 +813,7 @@
 .noticed-chip svg {
   color: var(--accent);
 }
+.mem__chip-edit,
 .mem__chip-del {
   background: none;
   border: none;
@@ -822,6 +823,10 @@
   padding: 0 0 0 4px;
   line-height: 1;
   opacity: 0.6;
+}
+.mem__chip-edit:hover {
+  color: var(--accent);
+  opacity: 1;
 }
 .mem__chip-del:hover {
   color: var(--error, #c0392b);

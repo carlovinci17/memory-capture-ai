@@ -28,16 +28,26 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
 
   const [addingYear, setAddingYear] = useState(false);
   const [yearInput, setYearInput] = useState('');
+  const [editingYearIdx, setEditingYearIdx] = useState<number | null>(null);
+  const [editYearValue, setEditYearValue] = useState('');
   const yearInputRef = useRef<HTMLInputElement>(null);
 
   const [addingPerson, setAddingPerson] = useState(false);
   const [personNameInput, setPersonNameInput] = useState('');
   const [personRelInput, setPersonRelInput] = useState('');
+  const [editingPersonIdx, setEditingPersonIdx] = useState<number | null>(null);
+  const [editPersonName, setEditPersonName] = useState('');
+  const [editPersonRel, setEditPersonRel] = useState('');
   const personInputRef = useRef<HTMLInputElement>(null);
 
   const [addingPlace, setAddingPlace] = useState(false);
   const [placeInput, setPlaceInput] = useState('');
+  const [editingPlaceIdx, setEditingPlaceIdx] = useState<number | null>(null);
+  const [editPlaceValue, setEditPlaceValue] = useState('');
   const placeInputRef = useRef<HTMLInputElement>(null);
+
+  const [editingTheme, setEditingTheme] = useState(false);
+  const [editThemeValue, setEditThemeValue] = useState('');
 
   useEffect(() => {
     let alive = true;
@@ -197,6 +207,45 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
     await updateMemory(profile.id, memory.id, { theme: '' });
   };
 
+  const saveEditedTheme = async () => {
+    const val = editThemeValue.trim();
+    if (val) await updateMemory(profile.id, memory.id, { theme: val });
+    setEditingTheme(false);
+  };
+
+  const saveEditedYear = async () => {
+    if (editingYearIdx === null) return;
+    const val = editYearValue.trim();
+    if (val) {
+      const newYears = (memory.years ?? []).map((y, i) => i === editingYearIdx ? val : y);
+      const era = newYears.slice().sort()[0];
+      await updateMemory(profile.id, memory.id, { years: newYears, era });
+    }
+    setEditingYearIdx(null);
+  };
+
+  const saveEditedPerson = async () => {
+    if (editingPersonIdx === null) return;
+    const name = editPersonName.trim();
+    if (name) {
+      const newPeople = (memory.people ?? []).map((p, i) =>
+        i === editingPersonIdx ? { text: name, relation: editPersonRel.trim() || null } : p
+      );
+      await updateMemory(profile.id, memory.id, { people: newPeople });
+    }
+    setEditingPersonIdx(null);
+  };
+
+  const saveEditedPlace = async () => {
+    if (editingPlaceIdx === null) return;
+    const val = editPlaceValue.trim();
+    if (val) {
+      const newPlaces = (memory.places ?? []).map((p, i) => i === editingPlaceIdx ? val : p);
+      await updateMemory(profile.id, memory.id, { places: newPlaces });
+    }
+    setEditingPlaceIdx(null);
+  };
+
   const onDelete = async () => {
     if (window.confirm(`Delete "${memory.title}"? This can't be undone.`)) {
       await deleteMemory(profile.id, memory.id);
@@ -301,8 +350,13 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
                     className="chip"
                     style={{ fontSize: 12, marginLeft: 10 }}
                     onClick={() => {
-                    const transcriptText = memory.transcript?.filter((t) => t.who === 'storyteller').map((t) => t.text).join('\n\n');
-                    setAnswerDraft(memory.answer || transcriptText || memory.excerpt);
+                    const storytellerTurns = (memory.transcript ?? []).filter((t) => t.who === 'storyteller').map((t) => t.text);
+                    const transcriptText = storytellerTurns.join('\n\n');
+                    // Prefer transcript when it contains more content than the stored answer
+                    const draft = transcriptText.length > (memory.answer ?? '').length
+                      ? transcriptText
+                      : (memory.answer || memory.excerpt);
+                    setAnswerDraft(draft);
                     setEditingAnswer(true);
                   }}
                   >
@@ -366,10 +420,25 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
             <div className="mem__enrich-row">
               <div className="mem__entity-label">Theme</div>
               <div className="noticed-chips" style={{ marginTop: 6 }}>
-                <span className="noticed-chip">
-                  <Icon name="spark" size={13} /> {memory.theme}
-                  <button className="mem__chip-del" onClick={() => void deleteTheme()} aria-label="Remove theme">✕</button>
-                </span>
+                {editingTheme ? (
+                  <span className="mem__add-form">
+                    <input
+                      className="mem__add-input"
+                      value={editThemeValue}
+                      onChange={(e) => setEditThemeValue(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') void saveEditedTheme(); if (e.key === 'Escape') setEditingTheme(false); }}
+                      autoFocus // eslint-disable-line jsx-a11y/no-autofocus
+                    />
+                    <button className="chip" onClick={() => void saveEditedTheme()} style={{ padding: '2px 10px' }}>Save</button>
+                    <button className="chip" onClick={() => setEditingTheme(false)} style={{ padding: '2px 8px' }}>✕</button>
+                  </span>
+                ) : (
+                  <span className="noticed-chip">
+                    <Icon name="spark" size={13} /> {memory.theme}
+                    <button className="mem__chip-edit" onClick={() => { setEditThemeValue(memory.theme!); setEditingTheme(true); }} aria-label="Edit theme">✎</button>
+                    <button className="mem__chip-del" onClick={() => void deleteTheme()} aria-label="Remove theme">✕</button>
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -379,10 +448,25 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
             <div className="mem__entity-label">When</div>
             <div className="noticed-chips" style={{ marginTop: 6 }}>
               {years.map((year, i) => (
-                <span className="noticed-chip" key={i}>
-                  <Icon name="calendar" size={13} /> {year}
-                  <button className="mem__chip-del" onClick={() => void deleteYear(i)} aria-label={`Remove ${year}`}>✕</button>
-                </span>
+                editingYearIdx === i ? (
+                  <span className="mem__add-form" key={i}>
+                    <input
+                      className="mem__add-input"
+                      value={editYearValue}
+                      onChange={(e) => setEditYearValue(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') void saveEditedYear(); if (e.key === 'Escape') setEditingYearIdx(null); }}
+                      autoFocus // eslint-disable-line jsx-a11y/no-autofocus
+                    />
+                    <button className="chip" onClick={() => void saveEditedYear()} style={{ padding: '2px 10px' }}>Save</button>
+                    <button className="chip" onClick={() => setEditingYearIdx(null)} style={{ padding: '2px 8px' }}>✕</button>
+                  </span>
+                ) : (
+                  <span className="noticed-chip" key={i}>
+                    <Icon name="calendar" size={13} /> {year}
+                    <button className="mem__chip-edit" onClick={() => { setEditYearValue(year); setEditingYearIdx(i); }} aria-label={`Edit ${year}`}>✎</button>
+                    <button className="mem__chip-del" onClick={() => void deleteYear(i)} aria-label={`Remove ${year}`}>✕</button>
+                  </span>
+                )
               ))}
               {addingYear ? (
                 <span className="mem__add-form">
@@ -416,11 +500,35 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
             <div className="mem__entity-label">People</div>
             <div className="noticed-chips" style={{ marginTop: 6 }}>
               {people.map((p, i) => (
-                <span className="noticed-chip" key={i}>
-                  <Icon name="people" size={13} />
-                  {p.text}{p.relation ? <em style={{ color: 'var(--ink-3)', fontStyle: 'normal' }}> · {p.relation}</em> : null}
-                  <button className="mem__chip-del" onClick={() => void deletePerson(i)} aria-label={`Remove ${p.text}`}>✕</button>
-                </span>
+                editingPersonIdx === i ? (
+                  <span className="mem__add-form mem__add-form--col" key={i}>
+                    <input
+                      className="mem__add-input"
+                      value={editPersonName}
+                      onChange={(e) => setEditPersonName(e.target.value)}
+                      placeholder="Name"
+                      autoFocus // eslint-disable-line jsx-a11y/no-autofocus
+                    />
+                    <input
+                      className="mem__add-input"
+                      value={editPersonRel}
+                      onChange={(e) => setEditPersonRel(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') void saveEditedPerson(); if (e.key === 'Escape') setEditingPersonIdx(null); }}
+                      placeholder="Relation (e.g. sister)"
+                    />
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button className="chip" onClick={() => void saveEditedPerson()} style={{ padding: '2px 10px' }}>Save</button>
+                      <button className="chip" onClick={() => setEditingPersonIdx(null)} style={{ padding: '2px 8px' }}>✕</button>
+                    </div>
+                  </span>
+                ) : (
+                  <span className="noticed-chip" key={i}>
+                    <Icon name="people" size={13} />
+                    {p.text}{p.relation ? <em style={{ color: 'var(--ink-3)', fontStyle: 'normal' }}> · {p.relation}</em> : null}
+                    <button className="mem__chip-edit" onClick={() => { setEditPersonName(p.text); setEditPersonRel(p.relation ?? ''); setEditingPersonIdx(i); }} aria-label={`Edit ${p.text}`}>✎</button>
+                    <button className="mem__chip-del" onClick={() => void deletePerson(i)} aria-label={`Remove ${p.text}`}>✕</button>
+                  </span>
+                )
               ))}
               {addingPerson ? (
                 <span className="mem__add-form mem__add-form--col">
@@ -460,10 +568,25 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
             <div className="mem__entity-label">Places</div>
             <div className="noticed-chips" style={{ marginTop: 6 }}>
               {places.map((place, i) => (
-                <span className="noticed-chip" key={i}>
-                  <Icon name="pin" size={13} /> {place}
-                  <button className="mem__chip-del" onClick={() => void deletePlace(i)} aria-label={`Remove ${place}`}>✕</button>
-                </span>
+                editingPlaceIdx === i ? (
+                  <span className="mem__add-form" key={i}>
+                    <input
+                      className="mem__add-input"
+                      value={editPlaceValue}
+                      onChange={(e) => setEditPlaceValue(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') void saveEditedPlace(); if (e.key === 'Escape') setEditingPlaceIdx(null); }}
+                      autoFocus // eslint-disable-line jsx-a11y/no-autofocus
+                    />
+                    <button className="chip" onClick={() => void saveEditedPlace()} style={{ padding: '2px 10px' }}>Save</button>
+                    <button className="chip" onClick={() => setEditingPlaceIdx(null)} style={{ padding: '2px 8px' }}>✕</button>
+                  </span>
+                ) : (
+                  <span className="noticed-chip" key={i}>
+                    <Icon name="pin" size={13} /> {place}
+                    <button className="mem__chip-edit" onClick={() => { setEditPlaceValue(place); setEditingPlaceIdx(i); }} aria-label={`Edit ${place}`}>✎</button>
+                    <button className="mem__chip-del" onClick={() => void deletePlace(i)} aria-label={`Remove ${place}`}>✕</button>
+                  </span>
+                )
               ))}
               {addingPlace ? (
                 <span className="mem__add-form">

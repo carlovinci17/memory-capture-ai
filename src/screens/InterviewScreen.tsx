@@ -514,6 +514,14 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
     if (!currentTopicFirstQRef.current) currentTopicFirstQRef.current = question;
 
     const result = await engine.extract(combinedText, noticed);
+
+    // Always keep the accumulated answer text up to date, even if extraction
+    // doesn't produce a title (e.g. a short follow-up answer).
+    if (currentTopicMemoryIdRef.current) {
+      const memId = currentTopicMemoryIdRef.current;
+      setMemories((prev) => prev.map((m) => m.id === memId ? { ...m, answer: combinedText } : m));
+    }
+
     if (result.title) {
       if (currentTopicMemoryIdRef.current) {
         // Follow-up answer on the same topic: update the existing card with richer content.
