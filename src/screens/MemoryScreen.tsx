@@ -153,6 +153,12 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
     setAddingYear(false);
   };
 
+  const deleteYear = async (idx: number) => {
+    const newYears = (memory.years ?? []).filter((_, i) => i !== idx);
+    const era = newYears.length ? newYears.slice().sort()[0] : '';
+    await updateMemory(profile.id, memory.id, { years: newYears, era });
+  };
+
   const savePerson = async () => {
     const name = personNameInput.trim();
     if (!name) return;
@@ -164,6 +170,12 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
     setAddingPerson(false);
   };
 
+  const deletePerson = async (idx: number) => {
+    await updateMemory(profile.id, memory.id, {
+      people: (memory.people ?? []).filter((_, i) => i !== idx),
+    });
+  };
+
   const savePlace = async () => {
     const val = placeInput.trim();
     if (!val) return;
@@ -173,6 +185,16 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
     }
     setPlaceInput('');
     setAddingPlace(false);
+  };
+
+  const deletePlace = async (idx: number) => {
+    await updateMemory(profile.id, memory.id, {
+      places: (memory.places ?? []).filter((_, i) => i !== idx),
+    });
+  };
+
+  const deleteTheme = async () => {
+    await updateMemory(profile.id, memory.id, { theme: '' });
   };
 
   const onDelete = async () => {
@@ -278,7 +300,11 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
                   <button
                     className="chip"
                     style={{ fontSize: 12, marginLeft: 10 }}
-                    onClick={() => { setAnswerDraft(memory.answer || memory.excerpt); setEditingAnswer(true); }}
+                    onClick={() => {
+                    const transcriptText = memory.transcript?.filter((t) => t.who === 'storyteller').map((t) => t.text).join('\n\n');
+                    setAnswerDraft(memory.answer || transcriptText || memory.excerpt);
+                    setEditingAnswer(true);
+                  }}
                   >
                     <Icon name="arrow" size={12} /> Edit
                   </button>
@@ -335,13 +361,14 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
           <div className="eyebrow" style={{ marginBottom: 4 }}>As you recall more</div>
           <h3 className="mem__enrich-title">Complete the picture</h3>
 
-          {/* Theme (AI-assigned, read-only) */}
+          {/* Theme */}
           {memory.theme && (
             <div className="mem__enrich-row">
               <div className="mem__entity-label">Theme</div>
               <div className="noticed-chips" style={{ marginTop: 6 }}>
                 <span className="noticed-chip">
                   <Icon name="spark" size={13} /> {memory.theme}
+                  <button className="mem__chip-del" onClick={() => void deleteTheme()} aria-label="Remove theme">✕</button>
                 </span>
               </div>
             </div>
@@ -354,6 +381,7 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
               {years.map((year, i) => (
                 <span className="noticed-chip" key={i}>
                   <Icon name="calendar" size={13} /> {year}
+                  <button className="mem__chip-del" onClick={() => void deleteYear(i)} aria-label={`Remove ${year}`}>✕</button>
                 </span>
               ))}
               {addingYear ? (
@@ -391,6 +419,7 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
                 <span className="noticed-chip" key={i}>
                   <Icon name="people" size={13} />
                   {p.text}{p.relation ? <em style={{ color: 'var(--ink-3)', fontStyle: 'normal' }}> · {p.relation}</em> : null}
+                  <button className="mem__chip-del" onClick={() => void deletePerson(i)} aria-label={`Remove ${p.text}`}>✕</button>
                 </span>
               ))}
               {addingPerson ? (
@@ -433,6 +462,7 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
               {places.map((place, i) => (
                 <span className="noticed-chip" key={i}>
                   <Icon name="pin" size={13} /> {place}
+                  <button className="mem__chip-del" onClick={() => void deletePlace(i)} aria-label={`Remove ${place}`}>✕</button>
                 </span>
               ))}
               {addingPlace ? (

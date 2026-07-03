@@ -20,10 +20,12 @@ import { PrivacyScreen } from './screens/PrivacyScreen';
 import type { StorytellerProfile } from './lib/domain/types';
 
 function meta(pathname: string, profile: StorytellerProfile): { eyebrow: string; title: string } {
-  if (pathname.startsWith('/interview')) return { eyebrow: 'Live voice session', title: 'The Interview' };
+  if (pathname.startsWith('/interview'))
+    return { eyebrow: 'Live voice session', title: 'The Interview' };
   if (pathname.startsWith('/profiles/')) return { eyebrow: 'Storyteller', title: profile.name };
   if (pathname.startsWith('/profiles')) return { eyebrow: "Everyone's stories", title: 'Profiles' };
-  if (pathname.startsWith('/summary')) return { eyebrow: 'Session complete', title: 'What we captured' };
+  if (pathname.startsWith('/summary'))
+    return { eyebrow: 'Session complete', title: 'What we captured' };
   return { eyebrow: todayLabel(), title: 'Your Journal' };
 }
 
@@ -86,7 +88,7 @@ function AppLayout() {
             <span className="demo-banner__label">Demo mode active</span>
             <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
               <button className="demo-banner__clear" onClick={() => void clearDemoData()}>
-                Clear my data
+                Reset / Clear my data
               </button>
               <button className="demo-banner__clear" onClick={goFullAccess}>
                 Get full access
@@ -118,9 +120,21 @@ export default function App() {
 
   if (!ready && !isAdminRoute) {
     return (
-      <div className="ob-stage" data-mood="terracotta" aria-busy="true" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div
+        className="ob-stage"
+        data-mood="terracotta"
+        aria-busy="true"
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      >
         <WatercolorDefs />
-        <p style={{ fontSize: 22, color: 'var(--ink-3)', fontFamily: 'var(--font-serif, Georgia, serif)', fontStyle: 'italic' }}>
+        <p
+          style={{
+            fontSize: 22,
+            color: 'var(--ink-3)',
+            fontFamily: 'var(--font-serif, Georgia, serif)',
+            fontStyle: 'italic',
+          }}
+        >
           Gathering your journal…
         </p>
       </div>
@@ -151,12 +165,27 @@ export default function App() {
             ? 'Our servers are having a moment. Your stories are safe — please try again shortly.'
             : 'This is usually a brief connection hiccup. Check your internet connection and try again.';
     return (
-      <div className="ob-stage" data-mood="terracotta" role="alert" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div
+        className="ob-stage"
+        data-mood="terracotta"
+        role="alert"
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      >
         <WatercolorDefs />
         <div className="ob__panel" style={{ maxWidth: 460, textAlign: 'center' }}>
-          <h1 className="display" style={{ fontSize: 24 }}>{heading}</h1>
+          <h1 className="display" style={{ fontSize: 24 }}>
+            {heading}
+          </h1>
           <p className="ob-hint">{detail}</p>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 12, flexWrap: 'wrap' }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: 8,
+              justifyContent: 'center',
+              marginTop: 12,
+              flexWrap: 'wrap',
+            }}
+          >
             {isAuth ? (
               <a
                 className="btn btn--primary"

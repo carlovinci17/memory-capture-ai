@@ -7,7 +7,7 @@ import { StoreProvider } from '../lib/store/StoreProvider';
 
 beforeEach(() => {
   localStorage.clear();
-  // Enable demo mode so the "Clear my data" banner button is visible.
+  // Enable demo mode so the "Reset / Clear my data" banner button is visible.
   localStorage.setItem('mcap_mode', 'demo');
   localStorage.setItem(
     'mcap_mvp_store_v1',
@@ -32,7 +32,7 @@ describe('Reset demo data', () => {
         </StoreProvider>
       </MemoryRouter>,
     );
-    // "Clear my data" lives in the demo-mode banner at the top of every page.
+    // "Reset / Clear my data" lives in the demo-mode banner at the top of every page.
     await waitFor(() => screen.getByRole('button', { name: /clear my data/i }));
     await user.click(screen.getByRole('button', { name: /clear my data/i }));
 

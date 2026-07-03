@@ -61,17 +61,17 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <Icon name="info" className="nav__icon" />
         <span>Privacy & AI</span>
       </NavLink>
-      {isAdminAuthenticated() && (
-        <NavLink
-          to="/admin"
-          className={({ isActive }) => 'nav__item' + (isActive ? ' is-active' : '')}
-          style={{ margin: '0 8px 4px' }}
-        >
-          <Icon name="lock" className="nav__icon" />
-          <span>Admin</span>
+      <NavLink
+        to="/admin"
+        className={({ isActive }) => 'nav__item' + (isActive ? ' is-active' : '')}
+        style={{ margin: '0 8px 4px' }}
+      >
+        <Icon name="lock" className="nav__icon" />
+        <span>Admin</span>
+        {isAdminAuthenticated() && (
           <Icon name="arrow" size={11} style={{ marginLeft: 'auto', color: 'var(--accent)', transform: 'rotate(-45deg)' }} />
-        </NavLink>
-      )}
+        )}
+      </NavLink>
       {getRuntimeMode() === 'production' && (
         <button
           className="nav__item"
