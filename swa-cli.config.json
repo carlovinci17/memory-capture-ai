@@ -7,7 +7,7 @@
       "appBuildCommand": "npm run build",
       "run": "npm run dev",
       "appDevserverUrl": "http://localhost:5173",
-      "apiDevserverUrl": "http://localhost:7071",
+      "apiDevserverUrl": "http://localhost:7072",
       "port": 4281
     }
   }

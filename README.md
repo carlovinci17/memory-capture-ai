@@ -94,8 +94,8 @@ npm start            # http://localhost:4281
 ```
 
 `npm start` runs two processes via `concurrently`:
-- `start:api` — builds `api/` and runs the Functions host on **:7071** with your global `func`.
-- `start:web` — `swa start` serves the SPA and **proxies `/api/*` to :7071** (`apiDevserverUrl` in
+- `start:api` — builds `api/` and runs the Functions host on **:7072** with your global `func`.
+- `start:web` — `swa start` serves the SPA and **proxies `/api/*` to :7072** (`apiDevserverUrl` in
   `swa-cli.config.json`).
 
 > Why not let the SWA CLI manage the Functions host itself? Its bundled auto-download of Core Tools is

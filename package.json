@@ -17,7 +17,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "start": "concurrently -k -n api,web -c magenta,green \"npm:start:api\" \"npm:start:web\"",
-    "start:api": "cd api && npm run build && func start --port 7071",
+    "start:api": "cd api && npm run build && func start --port 7072",
     "start:web": "swa start",
     "dev:api": "cd api && npm start"
   },
