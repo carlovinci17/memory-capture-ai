@@ -90,7 +90,7 @@ npm i -g azure-functions-core-tools@4 --unsafe-perm true   # or: brew install az
 #   AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, AZURE_OPENAI_DEPLOYMENT, AZURE_OPENAI_API_VERSION
 echo "VITE_AI_MODE=azure" >> .env
 
-npm start            # http://localhost:4280
+npm start            # http://localhost:4281
 ```
 
 `npm start` runs two processes via `concurrently`:
@@ -165,7 +165,7 @@ principal). Guest mode (default) has no auth and runs fully offline.
 - The public AI + speech endpoints stay anonymous but are **rate-limited per IP** (`api/src/lib/rateLimit.ts`)
   to cap abuse/spend; the client also enforces a per-session budget.
 
-Locally, the SWA CLI emulates auth: visit `http://localhost:4280/.auth/login/github` to mock a login.
+Locally, the SWA CLI emulates auth: visit `http://localhost:4281/.auth/login/github` to mock a login.
 
 ## Project status
 

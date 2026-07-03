@@ -1096,7 +1096,7 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
           {voiceChecking
             ? null
             : !voiceAvailable
-              ? '🔇 Voice is unavailable here — you can type your answers. (Voice needs the running API: open the app on the SWA port, e.g. http://localhost:4280, not the Vite port.)'
+              ? '🔇 Voice is unavailable here — you can type your answers. (Voice needs the running API: open the app on the SWA port, e.g. http://localhost:4281, not the Vite port.)'
               : mode === 'manual'
               ? askingNow
                 ? `Manual mode: type each question you ask so it's recorded, then capture ${first}'s answer. Suggested questions (right) are optional.`
