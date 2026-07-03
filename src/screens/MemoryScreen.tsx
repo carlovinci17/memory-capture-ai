@@ -108,11 +108,25 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
     const trimmed = answerDraft.trim();
     if (!trimmed) return;
     setRegenerating(true);
-    // Replace transcript with the edited text so the conversation view shows the update
-    const patch: Partial<Memory> = {
-      answer: trimmed,
-      transcript: [{ who: 'storyteller' as const, text: trimmed, ts: Date.now() }],
-    };
+    // Rebuild transcript: keep all ai/asker turns, collapse storyteller turns into
+    // one turn at the first storyteller position containing the full edited text.
+    const existingTurns = memory!.transcript ?? [];
+    let storytellerInserted = false;
+    const newTranscript = existingTurns.reduce<NonNullable<Memory['transcript']>>((acc, t) => {
+      if (t.who === 'storyteller') {
+        if (!storytellerInserted) {
+          acc.push({ ...t, text: trimmed, ts: Date.now() });
+          storytellerInserted = true;
+        }
+      } else {
+        acc.push(t);
+      }
+      return acc;
+    }, []);
+    if (!storytellerInserted) {
+      newTranscript.push({ who: 'storyteller' as const, text: trimmed, ts: Date.now() });
+    }
+    const patch: Partial<Memory> = { answer: trimmed, transcript: newTranscript };
     const updated: Memory = { ...memory!, answer: trimmed };
     const extracted = await reextract(updated);
     if (extracted) {
