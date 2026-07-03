@@ -266,6 +266,8 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   const [aiSpeaking, setAiSpeaking] = useState(false);
   const [waveData, setWaveData] = useState<number[]>([]);
   const [paused, setPaused] = useState(false);
+  const [topicPromptPending, setTopicPromptPending] = useState(false);
+  const pendingNextMsgsRef = useRef<Bubble[]>([]);
   // Voice (Azure AI Speech) — optional enhancement; typing always works.
   const [voiceAvailable, setVoiceAvailable] = useState(false);
   // Always start with TTS off so the TTS effect doesn't auto-fire before the user
@@ -283,7 +285,7 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   const modeRef = useRef<Mode>('ai');
   // Topic pacing: count questions on the current topic; pivot at a random threshold.
   const topicTurnsRef = useRef(0);
-  const pivotAtRef = useRef(randomBetween(3, 6));
+  const pivotAtRef = useRef(randomBetween(6, 8));
   // Silence-based auto-submit: fires after 2.5 s of no new speech segments.
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Synchronous paused flag so the TTS effect can check it without needing it in deps.
@@ -590,7 +592,7 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
     const transcriptText = messages.map((m) => m.text).join(' ');
     const q = pickNewTopic(transcriptText);
     topicTurnsRef.current = 0;
-    pivotAtRef.current = randomBetween(3, 6);
+    pivotAtRef.current = randomBetween(6, 8);
     resetTopicTracking();
     setThinking(true);
     setTimeout(() => {
@@ -598,6 +600,26 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
       setThinking(false);
       setMessages((m) => [...m, { who: 'ai', text: q }]);
     }, 500);
+  };
+
+  const confirmContinueTopic = () => {
+    setTopicPromptPending(false);
+    aiFollowUp(pendingNextMsgsRef.current);
+  };
+
+  const confirmNewTopic = () => {
+    setTopicPromptPending(false);
+    topicTurnsRef.current = 0;
+    pivotAtRef.current = randomBetween(6, 8);
+    resetTopicTracking();
+    const transcriptText = pendingNextMsgsRef.current.map((m) => m.text).join(' ');
+    const pivotQ = pickNewTopic(transcriptText);
+    setThinking(true);
+    setTimeout(() => {
+      if (!mountedRef.current) return;
+      setThinking(false);
+      setMessages((m) => [...m, { who: 'ai', text: pivotQ }]);
+    }, 600);
   };
 
   const askQuestion = (q?: string) => {
@@ -613,6 +635,7 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
     const val = (forceVal ?? text).trim();
     if (!val || thinking) return;
     setText('');
+    setTopicPromptPending(false);
     stopListening();
     // The most recent non-answer turn is the question that prompted this memory.
     const question = [...messages].reverse().find((m) => m.who !== 'storyteller')?.text;
@@ -625,16 +648,9 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
         // Count this turn and decide: follow up on current topic or pivot.
         topicTurnsRef.current += 1;
         if (topicTurnsRef.current >= pivotAtRef.current) {
-          topicTurnsRef.current = 0;
-          pivotAtRef.current = randomBetween(3, 6);
-          resetTopicTracking();
-          const transcriptText = nextMsgs.map((m) => m.text).join(' ');
-          const pivotQ = pickNewTopic(transcriptText);
-          setTimeout(() => {
-            if (!mountedRef.current) return;
-            setThinking(false);
-            setMessages((m) => [...m, { who: 'ai', text: pivotQ }]);
-          }, 600);
+          pendingNextMsgsRef.current = nextMsgs;
+          setThinking(false);
+          setTopicPromptPending(true);
         } else {
           aiFollowUp(nextMsgs);
         }
@@ -905,6 +921,24 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
                 </div>
               )}
             </div>
+          )}
+          {topicPromptPending && !thinking && (
+            <>
+              <div className="bubble bubble--ai">
+                <div className="bubble__who">{persona.name}</div>
+                <div className="bubble__text">
+                  We've covered this topic well. Would you like to keep exploring, or shall we move on to something new?
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, paddingBottom: 4 }}>
+                <button className="chip" onClick={confirmContinueTopic}>
+                  <Icon name="quote" size={13} /> Continue this topic
+                </button>
+                <button className="chip" onClick={confirmNewTopic}>
+                  <Icon name="spark" size={13} /> New topic
+                </button>
+              </div>
+            </>
           )}
           {/* Manual mode: suggested questions appear inline in the chat */}
           {mode === 'manual' && askingNow && !thinking && suggestions.length > 0 && (
