@@ -1170,6 +1170,15 @@
   line-height: 1.45;
 }
 
+.iv__topic-card--custom {
+  border-style: dashed;
+  border-color: var(--ink-4);
+  color: var(--ink-3);
+}
+.iv__topic-card--custom .iv__topic-name {
+  color: var(--ink-2);
+}
+
 /* compact the interview stage-top so modes + asker row fit (MVP-only override) */
 .iv__stagetop {
   padding: 18px 30px 10px;

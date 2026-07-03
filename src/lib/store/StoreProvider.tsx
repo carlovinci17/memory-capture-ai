@@ -163,7 +163,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const resetAll = useCallback(async () => {
-    // Remove each profile via the active repository (local or cloud).
     for (const p of store.profiles) {
       await repo.remove(p.id);
     }

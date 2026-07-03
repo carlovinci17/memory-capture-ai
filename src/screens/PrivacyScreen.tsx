@@ -138,7 +138,7 @@ export function PrivacyScreen() {
               <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6, margin: 0 }}>
                 Stories and photos are stored in <strong>Azure Cosmos DB and Blob
                 Storage</strong> (Microsoft cloud). This mode is password-protected and
-                only used by the portfolio owner for their own personal stories.
+                only used by the app owner for their own personal stories.
               </p>
             </div>
           </div>
@@ -200,7 +200,7 @@ export function PrivacyScreen() {
             </Fact>
             <Fact label="Production access">
               The production mode (Azure cloud storage) is locked behind a password
-              known only to the portfolio owner. Visitors always operate in demo mode.
+              known only to the app owner. Visitors always operate in demo mode.
             </Fact>
             <Fact label="Data in transit and at rest">
               All communication with Azure services uses HTTPS. Data stored in Azure

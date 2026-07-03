@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './lib/auth/auth';
 import { AuthGate } from './components/AuthGate';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Design system — ported verbatim from the approved prototype.
 // a11y-reset must load first so ported class rules win on specifics.
@@ -19,10 +20,12 @@ if (!rootEl) throw new Error('Root element #root not found');
 
 createRoot(rootEl).render(
   <StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <AuthGate />
-      </AuthProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <AuthGate />
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   </StrictMode>,
 );

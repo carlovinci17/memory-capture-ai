@@ -151,13 +151,10 @@ flowchart TB
   %% ── LAYER 6: EXTERNAL SERVICES ──────────────────────────────────────
   subgraph EXTERNAL["🔗 External Services"]
     GITHUB["GitHub\nOAuth provider\nSource repo\nGitHub Actions CI/CD"]
-    VERCEL["Vercel\nAlternative speech token proxy\n/api/speech/token.js (ESM)"]
   end
 
   EDGE_AUTH --> GITHUB
   GITHUB --> CICD
-  BROWSER -- "speech token (alt)" --> VERCEL
-  VERCEL --> SPEECH_TOKEN_SVC
 
   %% ── KEY DATA FLOWS ───────────────────────────────────────────────────
   subgraph FLOWS["🔄 Key Data Flows"]
@@ -182,7 +179,7 @@ flowchart TB
   class OAI_EXTRACT,OAI_NEXT_Q,OAI_SUGGEST,OAI_SUMMARY,OAI_IMAGE,SPEECH_TOKEN_SVC,SPEECH_STT,SPEECH_TTS ai
   class COL_PROFILES,BLOB_PHOTOS,BLOB_ART data
   class STORE,AUTH,STT,TTS,HTTP_ENG,FALLBACK,ENGINE browser
-  class GITHUB,VERCEL external
+  class GITHUB external
   class F1,F2,F3,F4 flow
   class S3 highlight
 ```
@@ -204,4 +201,3 @@ flowchart TB
 | AI — Chat | Azure OpenAI gpt-4o-mini | Question generation, memory extraction, summaries |
 | AI — Image | Azure OpenAI gpt-image-1 | Watercolor illustration per captured memory |
 | AI — Speech | Azure AI Speech (australiaeast) | STT from microphone + TTS persona voices |
-| Proxy | Vercel (serverless) | Alternative speech token endpoint |

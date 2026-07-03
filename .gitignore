@@ -28,3 +28,10 @@ coverage
 # Azure / SWA
 .azure
 api/local.settings.json
+
+# TypeScript build info (generated artifacts)
+*.tsbuildinfo
+
+# Untracked dev artifacts
+ap/
+public/Screenshot*

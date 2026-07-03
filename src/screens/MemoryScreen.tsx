@@ -20,26 +20,21 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
   const [speaking, setSpeaking] = useState(false);
   const [transcriptOpen, setTranscriptOpen] = useState(false);
 
-  // Answer editor
   const [editingAnswer, setEditingAnswer] = useState(false);
   const [answerDraft, setAnswerDraft] = useState('');
   const [regenerating, setRegenerating] = useState(false);
 
-  // Image generation
   const [generatingImage, setGeneratingImage] = useState(false);
 
-  // Year editor
   const [addingYear, setAddingYear] = useState(false);
   const [yearInput, setYearInput] = useState('');
   const yearInputRef = useRef<HTMLInputElement>(null);
 
-  // Person editor
   const [addingPerson, setAddingPerson] = useState(false);
   const [personNameInput, setPersonNameInput] = useState('');
   const [personRelInput, setPersonRelInput] = useState('');
   const personInputRef = useRef<HTMLInputElement>(null);
 
-  // Place editor
   const [addingPlace, setAddingPlace] = useState(false);
   const [placeInput, setPlaceInput] = useState('');
   const placeInputRef = useRef<HTMLInputElement>(null);

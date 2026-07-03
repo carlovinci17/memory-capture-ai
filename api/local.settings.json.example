@@ -7,7 +7,17 @@
     "AZURE_OPENAI_API_KEY": "your-key-here",
     "AZURE_OPENAI_DEPLOYMENT": "gpt-4o-mini",
     "AZURE_OPENAI_API_VERSION": "2024-08-01-preview",
-    "AZURE_SPEECH_KEY": "",
-    "AZURE_SPEECH_REGION": ""
+    "AZURE_OPENAI_IMAGE_ENDPOINT": "https://YOUR-IMAGE-RESOURCE.openai.azure.com/",
+    "AZURE_OPENAI_IMAGE_API_KEY": "your-image-key-here",
+    "AZURE_OPENAI_IMAGE_DEPLOYMENT": "gpt-image-1",
+    "AZURE_SPEECH_KEY": "your-speech-key-here",
+    "AZURE_SPEECH_REGION": "australiaeast",
+    "COSMOS_CONNECTION_STRING": "AccountEndpoint=https://YOUR-COSMOS.documents.azure.com:443/;AccountKey=your-key-here;",
+    "BLOB_CONNECTION_STRING": "DefaultEndpointsProtocol=https;AccountName=YOUR-ACCOUNT;AccountKey=your-key-here;EndpointSuffix=core.windows.net",
+    "ACS_CONNECTION_STRING": "endpoint=https://YOUR-ACS-RESOURCE.communication.azure.com/;accesskey=your-key-here",
+    "NOTIFY_FROM_EMAIL": "donotreply@YOUR-ACS-DOMAIN.azurecomm.net",
+    "NOTIFY_EMAIL": "your-notification-email@example.com",
+    "ADMIN_APPROVE_SECRET": "your-secret-here",
+    "APP_URL": "https://your-app.azurestaticapps.net"
   }
 }

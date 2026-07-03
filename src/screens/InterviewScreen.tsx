@@ -270,6 +270,7 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   const pendingNextMsgsRef = useRef<Bubble[]>([]);
   // Voice (Azure AI Speech) — optional enhancement; typing always works.
   const [voiceAvailable, setVoiceAvailable] = useState(false);
+  const [voiceChecking, setVoiceChecking] = useState(true);
   // Always start with TTS off so the TTS effect doesn't auto-fire before the user
   // has given a browser audio gesture. Begin button is the intentional unlock point.
   const [ttsOn, setTtsOn] = useState(false);
@@ -324,7 +325,11 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   useEffect(() => {
     mountedRef.current = true;
     let alive = true;
-    void isSpeechAvailable().then((ok) => alive && setVoiceAvailable(ok));
+    void isSpeechAvailable().then((ok) => {
+      if (!alive) return;
+      setVoiceAvailable(ok);
+      setVoiceChecking(false);
+    });
     return () => {
       alive = false;
       mountedRef.current = false;
@@ -710,6 +715,21 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   };
 
 
+  const selectCustomTopic = async () => {
+    const q = "What would you like to talk about today? It can be anything — a person, a place, a time in your life, or a feeling.";
+    setTopicOptions(null);
+    setMessages([{ who: 'ai', text: q }]);
+    if (!voiceAvailable) return;
+    setTtsOn(true);
+    ttsOnRef.current = true;
+    lastSpokeRef.current = 0;
+    setAiSpeaking(true);
+    await speak(q, persona.voice);
+    if (!mountedRef.current) return;
+    setAiSpeaking(false);
+    void startListening();
+  };
+
   const pauseSession = () => {
     stopSpeaking();
     stopListening();
@@ -882,6 +902,14 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
                     <span className="iv__topic-q">{t.questions[0]}</span>
                   </button>
                 ))}
+                <button
+                  className="iv__topic-card iv__topic-card--custom"
+                  onClick={() => void selectCustomTopic()}
+                  disabled={aiSpeaking}
+                >
+                  <span className="iv__topic-name">Choose my own topic</span>
+                  <span className="iv__topic-q">Tell the AI what you'd like to talk about</span>
+                </button>
               </div>
             </div>
           ) : voiceAvailable && mode !== 'manual' && interviewStarted ? (
@@ -979,32 +1007,41 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
         {/* AI mode: manually advance to a follow-up or a fresh topic */}
         {mode === 'ai' && (
           <div className="iv__ai-actions">
-            {(() => {
-              const lastAiText = [...messages].reverse().find((m) => m.who === 'ai')?.text;
-              return (
+            {voiceChecking ? (
+              <span style={{ fontSize: 12, color: 'var(--ink-4)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', border: '2px solid var(--ink-4)', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite', display: 'inline-block' }} />
+                Checking voice…
+              </span>
+            ) : (
+              <>
+                {(() => {
+                  const lastAiText = [...messages].reverse().find((m) => m.who === 'ai')?.text;
+                  return (
+                    <button
+                      className="chip"
+                      disabled={thinking || !voiceAvailable || !lastAiText}
+                      onClick={() => lastAiText && void speak(lastAiText, persona.voice)}
+                    >
+                      <Icon name="repeat" size={13} /> Repeat
+                    </button>
+                  );
+                })()}
                 <button
                   className="chip"
-                  disabled={thinking || !voiceAvailable || !lastAiText}
-                  onClick={() => lastAiText && void speak(lastAiText, persona.voice)}
+                  disabled={thinking}
+                  onClick={() => aiFollowUp(messages)}
                 >
-                  <Icon name="repeat" size={13} /> Repeat
+                  <Icon name="quote" size={13} /> Next question
                 </button>
-              );
-            })()}
-            <button
-              className="chip"
-              disabled={thinking}
-              onClick={() => aiFollowUp(messages)}
-            >
-              <Icon name="quote" size={13} /> Next question
-            </button>
-            <button
-              className="chip"
-              disabled={thinking}
-              onClick={handleNextTopic}
-            >
-              <Icon name="spark" size={13} /> New topic
-            </button>
+                <button
+                  className="chip"
+                  disabled={thinking}
+                  onClick={handleNextTopic}
+                >
+                  <Icon name="spark" size={13} /> New topic
+                </button>
+              </>
+            )}
           </div>
         )}
 
@@ -1056,9 +1093,11 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
           </button>
         </div>
         <div className="iv__hint">
-          {!voiceAvailable
-            ? '🔇 Voice is unavailable here — you can type your answers. (Voice needs the running API: open the app on the SWA port, e.g. http://localhost:4280, not the Vite port.)'
-            : mode === 'manual'
+          {voiceChecking
+            ? null
+            : !voiceAvailable
+              ? '🔇 Voice is unavailable here — you can type your answers. (Voice needs the running API: open the app on the SWA port, e.g. http://localhost:4280, not the Vite port.)'
+              : mode === 'manual'
               ? askingNow
                 ? `Manual mode: type each question you ask so it's recorded, then capture ${first}'s answer. Suggested questions (right) are optional.`
                 : `Now type ${first}'s answer and press Enter — it's saved word for word. Then it's your turn to ask again.`
