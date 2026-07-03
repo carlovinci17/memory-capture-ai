@@ -25,7 +25,7 @@ export function AdminScreen() {
   const navigate = useNavigate();
   const [authed, setAuthed] = useState(isAdminAuthenticated);
   const [pw, setPw] = useState('');
-  const [pwError, setPwError] = useState(false);
+  const [pwErrorMsg, setPwErrorMsg] = useState('');
   const [checking, setChecking] = useState(false);
 
   const currentMode = isDemoMode() ? 'demo' : 'production';
@@ -41,7 +41,11 @@ export function AdminScreen() {
   }, []);
 
   const submitPassword = async () => {
-    if (!pw || checking) return;
+    if (checking) return;
+    if (!pw.trim()) {
+      setPwErrorMsg('No password entered.');
+      return;
+    }
     setChecking(true);
     const ok = await verifyPassword(pw);
     setChecking(false);
@@ -49,7 +53,7 @@ export function AdminScreen() {
       setAdminAuthenticated();
       setAuthed(true);
     } else {
-      setPwError(true);
+      setPwErrorMsg('Incorrect password.');
       setPw('');
     }
   };
@@ -81,15 +85,15 @@ export function AdminScreen() {
                 className="ob-input"
                 type="password"
                 value={pw}
-                onChange={(e) => { setPw(e.target.value); setPwError(false); }}
+                onChange={(e) => { setPw(e.target.value); setPwErrorMsg(''); }}
                 onKeyDown={(e) => e.key === 'Enter' && void submitPassword()}
                 placeholder="Admin password"
                 // eslint-disable-next-line jsx-a11y/no-autofocus
                 autoFocus
               />
-              {pwError && (
+              {pwErrorMsg && (
                 <div className="ob-hint" style={{ color: 'var(--error, #c0392b)', marginTop: 6 }}>
-                  Incorrect password.
+                  {pwErrorMsg}
                 </div>
               )}
             </div>
@@ -98,7 +102,7 @@ export function AdminScreen() {
               <button
                 className="btn btn--primary"
                 onClick={() => void submitPassword()}
-                disabled={!pw || checking}
+                disabled={checking}
                 style={{ width: '100%' }}
               >
                 {checking ? 'Checking…' : 'Enter'}

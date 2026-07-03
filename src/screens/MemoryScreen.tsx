@@ -76,7 +76,7 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
     );
   }
 
-  const reextract = async (mem: Memory): Promise<{ summary: string; excerpt: string } | null> => {
+  const reextract = async (mem: Memory): Promise<{ title?: string; summary: string; excerpt: string } | null> => {
     const peopleCtx = (mem.people ?? []).map((p) => p.relation ? `${p.text} (${p.relation})` : p.text).join(', ');
     const placesCtx = (mem.places ?? []).join(', ');
     const yearsCtx = (mem.years ?? []).join(', ');
@@ -96,9 +96,9 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
         body: JSON.stringify({ answerText }),
       });
       if (!res.ok) return null;
-      const data = (await res.json()) as { summary?: string; excerpt?: string };
+      const data = (await res.json()) as { title?: string; summary?: string; excerpt?: string };
       if (!data.summary) return null;
-      return { summary: data.summary, excerpt: data.excerpt ?? mem.excerpt };
+      return { title: data.title, summary: data.summary, excerpt: data.excerpt ?? mem.excerpt };
     } catch {
       return null;
     }
@@ -112,6 +112,7 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
     const updated: Memory = { ...memory!, answer: trimmed };
     const extracted = await reextract(updated);
     if (extracted) {
+      if (extracted.title) patch.title = extracted.title;
       patch.summary = extracted.summary;
       patch.excerpt = extracted.excerpt;
     }
