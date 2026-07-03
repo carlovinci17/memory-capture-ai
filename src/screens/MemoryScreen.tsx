@@ -20,8 +20,8 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
   const [speaking, setSpeaking] = useState(false);
   const [transcriptOpen, setTranscriptOpen] = useState(false);
 
-  const [editingAnswer, setEditingAnswer] = useState(false);
-  const [answerDraft, setAnswerDraft] = useState('');
+  const [editingTurnIdx, setEditingTurnIdx] = useState<number | null>(null);
+  const [turnDraft, setTurnDraft] = useState('');
   const [regenerating, setRegenerating] = useState(false);
 
   const [generatingImage, setGeneratingImage] = useState(false);
@@ -104,31 +104,31 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
     }
   };
 
-  const saveAnswer = async () => {
-    const trimmed = answerDraft.trim();
+  // idx = transcript index for transcript turns; -1 = editing memory.answer directly
+  const saveTurn = async (idx: number) => {
+    const trimmed = turnDraft.trim();
     if (!trimmed) return;
     setRegenerating(true);
-    // Rebuild transcript: keep all ai/asker turns, collapse storyteller turns into
-    // one turn at the first storyteller position containing the full edited text.
-    const existingTurns = memory!.transcript ?? [];
-    let storytellerInserted = false;
-    const newTranscript = existingTurns.reduce<NonNullable<Memory['transcript']>>((acc, t) => {
-      if (t.who === 'storyteller') {
-        if (!storytellerInserted) {
-          acc.push({ ...t, text: trimmed, ts: Date.now() });
-          storytellerInserted = true;
-        }
-      } else {
-        acc.push(t);
-      }
-      return acc;
-    }, []);
-    if (!storytellerInserted) {
-      newTranscript.push({ who: 'storyteller' as const, text: trimmed, ts: Date.now() });
+
+    let newTranscript = memory!.transcript ? [...memory!.transcript] : undefined;
+    let combinedAnswer: string;
+
+    if (idx === -1 || !newTranscript) {
+      // No transcript — editing the flat answer directly
+      combinedAnswer = trimmed;
+    } else {
+      // Update just this one turn in place
+      newTranscript = newTranscript.map((t, i) =>
+        i === idx ? { ...t, text: trimmed, ts: Date.now() } : t,
+      );
+      combinedAnswer = newTranscript
+        .filter((t) => t.who === 'storyteller')
+        .map((t) => t.text)
+        .join('\n\n');
     }
-    const patch: Partial<Memory> = { answer: trimmed, transcript: newTranscript };
-    const updated: Memory = { ...memory!, answer: trimmed };
-    const extracted = await reextract(updated);
+
+    const patch: Partial<Memory> = { answer: combinedAnswer, ...(newTranscript ? { transcript: newTranscript } : {}) };
+    const extracted = await reextract({ ...memory!, answer: combinedAnswer });
     if (extracted) {
       if (extracted.title) patch.title = extracted.title;
       patch.summary = extracted.summary;
@@ -136,7 +136,7 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
     }
     await updateMemory(profile.id, memory!.id, patch);
     setRegenerating(false);
-    setEditingAnswer(false);
+    setEditingTurnIdx(null);
   };
 
   const generateImage = async () => {
@@ -350,81 +350,101 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
           {/* Conversation — collapsible, with edit */}
           {hasFullContent && (
             <div className="panel rise">
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <button
-                  className="mem__expand-btn"
-                  onClick={() => { setTranscriptOpen((o) => !o); if (editingAnswer) setEditingAnswer(false); }}
-                  aria-expanded={transcriptOpen}
-                  style={{ flex: 1 }}
-                >
-                  <Icon
-                    name="chev"
-                    size={15}
-                    style={{ transform: transcriptOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}
-                  />
-                  {transcriptOpen ? 'Hide conversation' : 'See the conversation'}
-                </button>
-                {transcriptOpen && !editingAnswer && (
-                  <button
-                    className="chip"
-                    style={{ fontSize: 12, marginLeft: 10 }}
-                    onClick={() => {
-                    // Prefer the stored answer (includes any user edits); fall back to
-                    // transcript storyteller turns only when there is no answer yet.
-                    const storytellerTurns = (memory.transcript ?? [])
-                      .filter((t) => t.who === 'storyteller')
-                      .map((t) => t.text);
-                    const transcriptText = storytellerTurns.join('\n\n');
-                    const draft = (memory.answer && memory.answer.trim())
-                      ? memory.answer
-                      : (transcriptText || memory.excerpt);
-                    setAnswerDraft(draft);
-                    setEditingAnswer(true);
-                  }}
-                  >
-                    <Icon name="arrow" size={12} /> Edit
-                  </button>
-                )}
-              </div>
+              <button
+                className="mem__expand-btn"
+                onClick={() => { setTranscriptOpen((o) => !o); setEditingTurnIdx(null); }}
+                aria-expanded={transcriptOpen}
+              >
+                <Icon
+                  name="chev"
+                  size={15}
+                  style={{ transform: transcriptOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}
+                />
+                {transcriptOpen ? 'Hide conversation' : 'See the conversation'}
+              </button>
 
               {transcriptOpen && (
                 <div style={{ marginTop: 18 }}>
-                  {editingAnswer ? (
-                    <>
-                      <textarea
-                        value={answerDraft}
-                        onChange={(e) => setAnswerDraft(e.target.value)}
-                        rows={8}
-                        style={{ width: '100%', boxSizing: 'border-box', fontFamily: 'var(--font-display)', fontSize: 15, lineHeight: 1.7, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line)', resize: 'vertical' }}
-                      />
-                      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                        <button className="btn btn--primary" style={{ fontSize: 13 }} onClick={() => void saveAnswer()} disabled={regenerating || !answerDraft.trim()}>
-                          {regenerating ? 'Saving…' : 'Save & regenerate summary'}
-                        </button>
-                        <button className="btn btn--ghost" style={{ fontSize: 13 }} onClick={() => setEditingAnswer(false)} disabled={regenerating}>
-                          Cancel
-                        </button>
-                      </div>
-                    </>
-                  ) : memory.transcript && memory.transcript.length ? (
+                  {memory.transcript && memory.transcript.length ? (
                     memory.transcript.map((t, i) => (
                       <div key={i} className={'bubble bubble--' + t.who} style={{ marginBottom: 10 }}>
-                        <div className="bubble__who">
-                          {t.who === 'storyteller'
-                            ? firstNameOf(profile.name)
-                            : t.who === 'asker'
-                              ? t.askerLabel || 'Family'
-                              : getPersona(profile.personaId).name}
+                        <div className="bubble__who" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span>
+                            {t.who === 'storyteller'
+                              ? firstNameOf(profile.name)
+                              : t.who === 'asker'
+                                ? t.askerLabel || 'Family'
+                                : getPersona(profile.personaId).name}
+                          </span>
+                          {t.who === 'storyteller' && editingTurnIdx === null && !regenerating && (
+                            <button
+                              className="mem__chip-edit"
+                              style={{ fontSize: 11, opacity: 0.7 }}
+                              onClick={() => { setTurnDraft(t.text); setEditingTurnIdx(i); }}
+                            >
+                              ✎ Edit
+                            </button>
+                          )}
                         </div>
-                        <div className={'bubble__text' + (t.who === 'storyteller' ? ' is-serif' : '')}>
-                          {t.text}
-                        </div>
+                        {editingTurnIdx === i ? (
+                          <>
+                            <textarea
+                              value={turnDraft}
+                              onChange={(e) => setTurnDraft(e.target.value)}
+                              rows={5}
+                              style={{ width: '100%', boxSizing: 'border-box', fontFamily: 'var(--font-display)', fontSize: 15, lineHeight: 1.7, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line)', resize: 'vertical', marginTop: 8 }}
+                            />
+                            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                              <button className="btn btn--primary" style={{ fontSize: 13 }} onClick={() => void saveTurn(i)} disabled={regenerating || !turnDraft.trim()}>
+                                {regenerating ? 'Saving…' : 'Save & regenerate'}
+                              </button>
+                              <button className="btn btn--ghost" style={{ fontSize: 13 }} onClick={() => setEditingTurnIdx(null)} disabled={regenerating}>
+                                Cancel
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <div className={'bubble__text' + (t.who === 'storyteller' ? ' is-serif' : '')}>
+                            {t.text}
+                          </div>
+                        )}
                       </div>
                     ))
                   ) : memory.answer ? (
-                    <p style={{ fontFamily: 'var(--font-display)', fontSize: 17, lineHeight: 1.7, color: 'var(--ink)', margin: 0 }}>
-                      {memory.answer}
-                    </p>
+                    <div className="bubble bubble--storyteller" style={{ marginBottom: 10 }}>
+                      <div className="bubble__who" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span>{firstNameOf(profile.name)}</span>
+                        {editingTurnIdx === null && !regenerating && (
+                          <button
+                            className="mem__chip-edit"
+                            style={{ fontSize: 11, opacity: 0.7 }}
+                            onClick={() => { setTurnDraft(memory.answer!); setEditingTurnIdx(-1); }}
+                          >
+                            ✎ Edit
+                          </button>
+                        )}
+                      </div>
+                      {editingTurnIdx === -1 ? (
+                        <>
+                          <textarea
+                            value={turnDraft}
+                            onChange={(e) => setTurnDraft(e.target.value)}
+                            rows={5}
+                            style={{ width: '100%', boxSizing: 'border-box', fontFamily: 'var(--font-display)', fontSize: 15, lineHeight: 1.7, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--line)', resize: 'vertical', marginTop: 8 }}
+                          />
+                          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                            <button className="btn btn--primary" style={{ fontSize: 13 }} onClick={() => void saveTurn(-1)} disabled={regenerating || !turnDraft.trim()}>
+                              {regenerating ? 'Saving…' : 'Save & regenerate'}
+                            </button>
+                            <button className="btn btn--ghost" style={{ fontSize: 13 }} onClick={() => setEditingTurnIdx(null)} disabled={regenerating}>
+                              Cancel
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="bubble__text is-serif">{memory.answer}</div>
+                      )}
+                    </div>
                   ) : null}
                 </div>
               )}
