@@ -108,7 +108,11 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
     const trimmed = answerDraft.trim();
     if (!trimmed) return;
     setRegenerating(true);
-    const patch: Partial<Memory> = { answer: trimmed };
+    // Replace transcript with the edited text so the conversation view shows the update
+    const patch: Partial<Memory> = {
+      answer: trimmed,
+      transcript: [{ who: 'storyteller' as const, text: trimmed, ts: Date.now() }],
+    };
     const updated: Memory = { ...memory!, answer: trimmed };
     const extracted = await reextract(updated);
     if (extracted) {
@@ -351,12 +355,15 @@ export function MemoryScreen({ profile }: { profile: StorytellerProfile }) {
                     className="chip"
                     style={{ fontSize: 12, marginLeft: 10 }}
                     onClick={() => {
-                    const storytellerTurns = (memory.transcript ?? []).filter((t) => t.who === 'storyteller').map((t) => t.text);
+                    // Prefer the stored answer (includes any user edits); fall back to
+                    // transcript storyteller turns only when there is no answer yet.
+                    const storytellerTurns = (memory.transcript ?? [])
+                      .filter((t) => t.who === 'storyteller')
+                      .map((t) => t.text);
                     const transcriptText = storytellerTurns.join('\n\n');
-                    // Prefer transcript when it contains more content than the stored answer
-                    const draft = transcriptText.length > (memory.answer ?? '').length
-                      ? transcriptText
-                      : (memory.answer || memory.excerpt);
+                    const draft = (memory.answer && memory.answer.trim())
+                      ? memory.answer
+                      : (transcriptText || memory.excerpt);
                     setAnswerDraft(draft);
                     setEditingAnswer(true);
                   }}
