@@ -1,6 +1,6 @@
 // App.tsx — routing + app shell. Guest/local mode; cloud auth lands in M9.
-import { Navigate, Outlet, Route, Routes, useLocation, useParams } from 'react-router-dom';
-import { useState } from 'react';
+import { Navigate, Outlet, Route, Routes, Link, useLocation, useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
 import { WatercolorDefs } from './components/Watercolor';
@@ -118,6 +118,22 @@ export default function App() {
   // or sign in, even when the API is failing in production mode.
   const isAdminRoute = location.pathname === '/admin';
 
+  // Compute denial state early so hooks below can reference it unconditionally.
+  const isDenied = !!loadError && !isAdminRoute && /not.?approved|access.?denied/i.test(loadError);
+
+  // Countdown before automatically returning to demo mode when access is denied.
+  const [countdown, setCountdown] = useState(3);
+  useEffect(() => {
+    if (!isDenied) return;
+    const id = setInterval(() => setCountdown((n) => n - 1), 1000);
+    return () => clearInterval(id);
+  }, [isDenied]);
+  useEffect(() => {
+    if (!isDenied || countdown > 0) return;
+    setRuntimeMode('demo');
+    window.location.reload();
+  }, [isDenied, countdown]);
+
   if (!ready && !isAdminRoute) {
     return (
       <div
@@ -137,13 +153,15 @@ export default function App() {
         >
           Gathering your journal…
         </p>
+        <footer className="ob-footer">
+          <Link to="/admin" className="ob-footer__link">Admin</Link>
+        </footer>
       </div>
     );
   }
 
   if (loadError && !isAdminRoute) {
     const isPending = /pending.?approval/i.test(loadError);
-    const isDenied = /not.?approved|access.?denied/i.test(loadError);
     const isAuth = !isPending && !isDenied && /401|403|unauthorized|forbidden/i.test(loadError);
     const isServer = /5\d\d/.test(loadError);
     const heading = isPending
@@ -158,7 +176,7 @@ export default function App() {
     const detail = isPending
       ? "You're in the queue. You'll receive an email once your account is approved."
       : isDenied
-        ? 'Your sign-up request was not approved. Contact the app owner for access.'
+        ? `Your access request was not approved. Returning to demo mode in ${countdown}…`
         : isAuth
           ? 'Sign in with your Google account to continue.'
           : isServer
@@ -194,15 +212,20 @@ export default function App() {
                 Sign in with Google
               </a>
             ) : isPending ? (
-              <button
-                className="btn btn--ghost"
-                onClick={async () => {
-                  await fetch('/api/users/cancel', { method: 'POST' }).catch(() => {});
-                  window.location.href = '/.auth/logout?post_logout_redirect_uri=/';
-                }}
-              >
-                Cancel request
-              </button>
+              <>
+                <button className="btn btn--primary" onClick={reload}>
+                  <Icon name="arrow" size={16} /> Refresh
+                </button>
+                <button
+                  className="btn btn--ghost"
+                  onClick={async () => {
+                    await fetch('/api/users/cancel', { method: 'POST' }).catch(() => {});
+                    window.location.href = '/.auth/logout?post_logout_redirect_uri=/';
+                  }}
+                >
+                  Cancel request
+                </button>
+              </>
             ) : !isDenied ? (
               <button className="btn btn--primary" onClick={reload}>
                 <Icon name="arrow" size={16} /> Try again
@@ -210,6 +233,9 @@ export default function App() {
             ) : null}
           </div>
         </div>
+        <footer className="ob-footer">
+          <Link to="/admin" className="ob-footer__link">Admin</Link>
+        </footer>
       </div>
     );
   }

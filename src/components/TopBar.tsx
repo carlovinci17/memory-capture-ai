@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Icon } from './Icon';
 import { Avatar } from './Avatar';
 import { useStore } from '../lib/store/StoreProvider';
+import { getRuntimeMode } from '../lib/demo/demoMode';
 import type { StorytellerProfile } from '../lib/domain/types';
 
 interface TopBarProps {
@@ -16,6 +17,7 @@ export function TopBar({ eyebrow, title, profile }: TopBarProps) {
   const { profiles, switchProfile } = useStore();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [googleUser, setGoogleUser] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -25,6 +27,16 @@ export function TopBar({ eyebrow, title, profile }: TopBarProps) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
+
+  useEffect(() => {
+    if (getRuntimeMode() !== 'production') return;
+    fetch('/.auth/me')
+      .then((r) => r.json())
+      .then((d: { clientPrincipal?: { userDetails?: string } | null }) => {
+        setGoogleUser(d?.clientPrincipal?.userDetails ?? null);
+      })
+      .catch(() => {});
+  }, []);
 
   const onSwitch = async (id: string) => {
     setOpen(false);
@@ -36,6 +48,9 @@ export function TopBar({ eyebrow, title, profile }: TopBarProps) {
     }
   };
 
+  const userInitial = googleUser ? googleUser.split('@')[0][0]?.toUpperCase() ?? '?' : '';
+  const userLabel = googleUser ? googleUser.split('@')[0] : '';
+
   return (
     <>
     <div className="topbar">
@@ -44,27 +59,59 @@ export function TopBar({ eyebrow, title, profile }: TopBarProps) {
         <div className="topbar__title">{title}</div>
       </div>
 
-      <button
-        className="topbar__profile"
-        onClick={() => setOpen((o) => !o)}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label={`Switch storyteller. Current: ${profile.name}`}
-      >
-        <div className="topbar__profile-txt">
-          <div className="topbar__profile-name">{profile.name}</div>
-          <div className="topbar__profile-meta">
-            {(profile.memories || []).length} memories captured
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
+        {googleUser && (
+          <div
+            title={googleUser}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '4px 10px 4px 4px',
+              borderRadius: 20,
+              background: 'var(--accent)',
+              color: '#fff',
+              fontSize: 12,
+              fontWeight: 600,
+              maxWidth: 180,
+              overflow: 'hidden',
+            }}
+          >
+            <span style={{
+              width: 24, height: 24, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.25)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 11, fontWeight: 700, flexShrink: 0,
+            }}>
+              {userInitial}
+            </span>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {userLabel}
+            </span>
           </div>
-        </div>
-        <Avatar profile={profile} size={40} />
-        <Icon
-          name="chev"
-          size={15}
-          className="topbar__profile-chev"
-          style={{ transform: open ? 'rotate(180deg)' : 'none' }}
-        />
-      </button>
+        )}
+
+        <button
+          className="topbar__profile"
+          style={{ marginLeft: 0 }}
+          onClick={() => setOpen((o) => !o)}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-label={`Switch storyteller. Current: ${profile.name}`}
+        >
+          <div className="topbar__profile-txt">
+            <div className="topbar__profile-name">{profile.name}</div>
+            <div className="topbar__profile-meta">
+              {(profile.memories || []).length} memories captured
+            </div>
+          </div>
+          <Avatar profile={profile} size={40} />
+          <Icon
+            name="chev"
+            size={15}
+            className="topbar__profile-chev"
+            style={{ transform: open ? 'rotate(180deg)' : 'none' }}
+          />
+        </button>
+      </div>
 
       {open && (
         <>
