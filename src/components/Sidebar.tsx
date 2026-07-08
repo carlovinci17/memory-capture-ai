@@ -65,8 +65,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <button
           className="nav__item"
           onClick={() => {
+            console.log('[Auth] Sidebar sign-out — setting demo mode, clearing SWA session');
             setRuntimeMode('demo');
-            window.location.href = '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/onboarding?access=1');
+            const url = '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/onboarding?access=1');
+            console.log('[Auth] Logout URL:', url);
+            window.location.href = url;
           }}
           style={{ margin: '0 8px 8px' }}
         >
