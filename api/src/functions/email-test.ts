@@ -21,8 +21,15 @@ async function handler(req: HttpRequest, ctx: InvocationContext): Promise<HttpRe
     ctx.log('[email-test] Send completed OK');
     return { status: 200, body: `Test email sent to ${to}` };
   } catch (err) {
-    ctx.error('[email-test] Send failed', err);
-    return { status: 500, body: `Send failed: ${String(err)}` };
+    const detail = {
+      message: (err as Error).message,
+      name: (err as Error).name,
+      statusCode: (err as { statusCode?: number }).statusCode,
+      code: (err as { code?: string }).code,
+      details: (err as { details?: unknown }).details,
+    };
+    ctx.error('[email-test] Send failed', detail);
+    return { status: 500, body: JSON.stringify(detail, null, 2) };
   }
 }
 

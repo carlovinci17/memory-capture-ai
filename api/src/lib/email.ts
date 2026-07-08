@@ -14,14 +14,27 @@ export async function sendEmail(opts: EmailOptions): Promise<void> {
   // Lazy import avoids loading the ACS SDK at startup (previously caused Functions crash).
   const { EmailClient } = await import('@azure/communication-email');
   const client = new EmailClient(connString);
-  // beginSend returns 202 Accepted when ACS queues the email.
-  // We do NOT call pollUntilDone() — polling makes repeated GET requests that
-  // hit ACS rate limits and throw 429 errors. Delivery status is tracked via
-  // EmailSendMailOperational / EmailStatusUpdateOperational in Log Analytics.
-  await client.beginSend({
-    senderAddress: from,
-    content: { subject: opts.subject, html: opts.html },
-    recipients: { to: [{ address: opts.to }] },
-  });
-  console.log('[email] ACS accepted send to:', opts.to, '| subject:', opts.subject);
+
+  // Retry up to 4 times with exponential backoff. ACS returns 429 when throttled.
+  const delays = [5_000, 15_000, 30_000];
+  for (let attempt = 0; attempt <= delays.length; attempt++) {
+    try {
+      await client.beginSend({
+        senderAddress: from,
+        content: { subject: opts.subject, html: opts.html },
+        recipients: { to: [{ address: opts.to }] },
+      });
+      console.log('[email] ACS accepted send to:', opts.to, '| subject:', opts.subject);
+      return;
+    } catch (err) {
+      const status = (err as { statusCode?: number }).statusCode;
+      if (status === 429 && attempt < delays.length) {
+        const waitMs = delays[attempt];
+        console.warn(`[email] ACS 429 on attempt ${attempt + 1}, retrying in ${waitMs / 1000}s`);
+        await new Promise((r) => setTimeout(r, waitMs));
+        continue;
+      }
+      throw err;
+    }
+  }
 }
