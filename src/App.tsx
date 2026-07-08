@@ -147,16 +147,24 @@ export default function App() {
         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       >
         <WatercolorDefs />
-        <p
-          style={{
-            fontSize: 22,
-            color: 'var(--ink-3)',
-            fontFamily: 'var(--font-serif, Georgia, serif)',
-            fontStyle: 'italic',
-          }}
-        >
-          Gathering your journal…
-        </p>
+        <div style={{ textAlign: 'center' }}>
+          <p
+            style={{
+              fontSize: 22,
+              color: 'var(--ink-3)',
+              fontFamily: 'var(--font-serif, Georgia, serif)',
+              fontStyle: 'italic',
+              margin: 0,
+            }}
+          >
+            Gathering your journal…
+          </p>
+          <div className="loading-dots" role="status" aria-label="Loading">
+            <span className="loading-dots__dot" />
+            <span className="loading-dots__dot" />
+            <span className="loading-dots__dot" />
+          </div>
+        </div>
       </div>
     );
   }

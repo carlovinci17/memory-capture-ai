@@ -1594,3 +1594,25 @@ button.noticed-chip.mem__add-btn svg {
 .iv__inline-suggestions .iv__qs-head {
   margin-bottom: 10px;
 }
+
+/* ---------- loading dots (gathering screen) ---------- */
+@keyframes dot-wave {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
+  30%            { transform: translateY(-6px); opacity: 1; }
+}
+.loading-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 20px;
+}
+.loading-dots__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: dot-wave 1.3s ease-in-out infinite;
+}
+.loading-dots__dot:nth-child(2) { animation-delay: 0.15s; }
+.loading-dots__dot:nth-child(3) { animation-delay: 0.30s; }
