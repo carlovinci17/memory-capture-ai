@@ -13,13 +13,17 @@ async function handler(req: HttpRequest, ctx: InvocationContext): Promise<HttpRe
 
   ctx.log('[email-test] Sending test email to', to);
   try {
-    await sendEmail({
+    const sent = await sendEmail({
       to,
       subject: 'Memory Capture AI — email test',
       html: `<p style="font-family:sans-serif">ACS email pipeline is working. Sent at ${new Date().toISOString()}.</p>`,
     });
-    ctx.log('[email-test] Send completed OK');
-    return { status: 200, body: `Test email sent to ${to}` };
+    if (!sent) {
+      ctx.warn('[email-test] ACS quota exhausted — email was NOT sent');
+      return { status: 429, body: 'ACS hourly quota exhausted (10/hour on Azure Managed Domain). Wait ~1 hour and try again.' };
+    }
+    ctx.log('[email-test] Send accepted by ACS');
+    return { status: 200, body: `Test email accepted by ACS — check inbox/spam at ${to}` };
   } catch (err) {
     const detail = {
       message: (err as Error).message,

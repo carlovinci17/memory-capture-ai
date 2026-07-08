@@ -4,12 +4,12 @@ interface EmailOptions {
   html: string;
 }
 
-export async function sendEmail(opts: EmailOptions): Promise<void> {
+export async function sendEmail(opts: EmailOptions): Promise<boolean> {
   const connString = process.env.ACS_CONNECTION_STRING;
   const from = process.env.NOTIFY_FROM_EMAIL;
   if (!connString || !from) {
     console.warn('[email] ACS_CONNECTION_STRING or NOTIFY_FROM_EMAIL not set — skipping notification');
-    return;
+    return false;
   }
   // Lazy import avoids loading the ACS SDK at startup (previously caused Functions crash).
   const { EmailClient } = await import('@azure/communication-email');
@@ -22,13 +22,14 @@ export async function sendEmail(opts: EmailOptions): Promise<void> {
       recipients: { to: [{ address: opts.to }] },
     });
     console.log('[email] ACS accepted send to:', opts.to, '| subject:', opts.subject);
+    return true;
   } catch (err) {
     const status = (err as { statusCode?: number }).statusCode;
     if (status === 429) {
-      // ACS Azure Managed Domain has a low hourly send quota — 429 during heavy
-      // testing is expected. In production (few emails/day) this will not trigger.
-      console.warn('[email] ACS 429 — hourly send quota reached. Email not sent to:', opts.to);
-      return; // Soft-fail: don't crash the caller, log and move on.
+      // ACS Azure Managed Domain: 10 sends/hour hard limit. Soft-fail so the
+      // caller (sign-up, approval) still completes even when quota is exhausted.
+      console.warn('[email] ACS 429 — hourly quota reached, email NOT sent to:', opts.to);
+      return false;
     }
     throw err;
   }
