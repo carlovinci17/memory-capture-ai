@@ -20,8 +20,8 @@ async function notifyAdmin(user: UserDoc): Promise<void> {
   if (!to) return;
   const appUrl = (process.env.APP_URL ?? '').replace(/\/$/, '');
   const token = generateToken(user.id);
-  const approveUrl = `${appUrl}/api/admin/approve?userId=${encodeURIComponent(user.id)}&token=${token}&action=approve`;
-  const denyUrl = `${appUrl}/api/admin/approve?userId=${encodeURIComponent(user.id)}&token=${token}&action=deny`;
+  const approveUrl = `${appUrl}/api/users/review?userId=${encodeURIComponent(user.id)}&token=${token}&action=approve`;
+  const denyUrl = `${appUrl}/api/users/review?userId=${encodeURIComponent(user.id)}&token=${token}&action=deny`;
   await sendEmail({
     to,
     subject: `New sign-up: ${user.name ?? user.email}`,

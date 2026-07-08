@@ -1,4 +1,4 @@
-// admin-approve.ts — GET /api/admin/approve?userId=&token=&action=approve|deny
+// admin-approve.ts — GET /api/users/review?userId=&token=&action=approve|deny
 // Called from the one-click links in the approval email. No SWA auth required;
 // security comes from the HMAC-signed token.
 import { app, type HttpRequest, type HttpResponseInit, type InvocationContext } from '@azure/functions';
@@ -44,6 +44,6 @@ async function handler(req: HttpRequest, ctx: InvocationContext): Promise<HttpRe
 app.http('admin-approve', {
   methods: ['GET'],
   authLevel: 'anonymous',
-  route: 'admin/approve',
+  route: 'users/review',
   handler,
 });
