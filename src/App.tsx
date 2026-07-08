@@ -135,6 +135,8 @@ export default function App() {
       .catch((e) => console.error('[Auth] /.auth/me fetch failed:', e));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [cancelling, setCancelling] = useState(false);
+
   // Countdown before automatically returning to demo mode when access is denied.
   const [countdown, setCountdown] = useState(3);
   useEffect(() => {
@@ -238,12 +240,15 @@ export default function App() {
                 </button>
                 <button
                   className="btn btn--ghost"
+                  disabled={cancelling}
                   onClick={async () => {
+                    setCancelling(true);
                     await fetch('/api/users/cancel', { method: 'POST' }).catch(() => {});
-                    window.location.href = '/.auth/logout?post_logout_redirect_uri=/';
+                    setRuntimeMode('demo');
+                    window.location.href = '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/onboarding?access=1');
                   }}
                 >
-                  Cancel request
+                  {cancelling ? 'Cancelling…' : 'Cancel request'}
                 </button>
               </>
             ) : !isDenied ? (
