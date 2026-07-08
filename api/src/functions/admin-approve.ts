@@ -1,9 +1,9 @@
-// admin-approve.ts — GET /api/users/notify-approved?userId=&token=
-// After manually approving a user in Cosmos DB, click the link in the admin
-// notification email to send them their welcome email. Does NOT modify the DB.
+// GET /api/users/review?userId=&action=approve|reject&token=
+// Called when admin clicks Approve or Reject in the notification email.
+// Verifies the HMAC token, updates the user's status in Cosmos, and emails the user.
 import { app, type HttpRequest, type HttpResponseInit, type InvocationContext } from '@azure/functions';
 import { verifyToken } from '../lib/tokens';
-import { notifyUser, getUserDoc } from '../lib/users';
+import { getUserDoc, updateUserStatus } from '../lib/users';
 import { isCosmosConfigured } from '../lib/cosmos';
 
 const html = (body: string): HttpResponseInit => ({
@@ -14,13 +14,16 @@ const html = (body: string): HttpResponseInit => ({
 
 async function handler(req: HttpRequest, ctx: InvocationContext): Promise<HttpResponseInit> {
   const userId = req.query.get('userId') ?? '';
-  const token = req.query.get('token') ?? '';
+  const action = req.query.get('action') ?? '';
+  const token  = req.query.get('token')  ?? '';
 
-  if (!userId || !token) return { status: 400, body: 'Missing parameters.' };
+  if (!userId || !token || (action !== 'approve' && action !== 'reject')) {
+    return { status: 400, body: 'Missing or invalid parameters.' };
+  }
 
   let valid: boolean;
   try {
-    valid = verifyToken(userId, token);
+    valid = verifyToken(userId, token, action);
   } catch {
     return { status: 503, body: 'ADMIN_APPROVE_SECRET is not configured on this server.' };
   }
@@ -28,28 +31,37 @@ async function handler(req: HttpRequest, ctx: InvocationContext): Promise<HttpRe
 
   if (!isCosmosConfigured()) return { status: 503, body: 'Database not configured.' };
 
+  const user = await getUserDoc(userId);
+  if (!user) {
+    return html('<h2>User not found ✗</h2><p style="color:#666">They may have cancelled their request.</p>');
+  }
+
+  if (user.status === 'approved' || user.status === 'denied') {
+    const label = user.status === 'approved' ? 'approved ✓' : 'rejected ✗';
+    return html(`<h2>Already ${label}</h2><p style="color:#666">This user has already been ${user.status}. No changes made.</p>`);
+  }
+
   try {
-    const user = await getUserDoc(userId);
-    if (!user) return html('<h2>User not found ✗</h2><p style="color:#666">They may have cancelled their request.</p>');
-    if (user.status !== 'approved') {
-      return html(`<h2>Not yet approved</h2><p style="color:#666">Set the user's status to <strong>approved</strong> in Cosmos DB first, then click the link again.</p>`);
-    }
-    const sent = await notifyUser(user);
-    if (!sent) {
-      ctx.warn('[notify-approved] ACS quota exhausted — welcome email NOT sent to', user.email);
-      return html(`<h2>Quota exhausted ✗</h2><p style="color:#666">ACS email quota is full (10/hour). Try again in up to an hour — the link still works.</p>`);
-    }
-    ctx.log('[notify-approved] welcome email sent to', user.email);
-    return html(`<h2>Welcome email sent ✓</h2><p style="color:#666">${user.email} has been notified. You can close this tab.</p>`);
+    const dbStatus = action === 'approve' ? 'approved' : 'denied';
+    await updateUserStatus(userId, dbStatus);
+    ctx.log(`[review] ${dbStatus} — ${user.email}`);
+
+    return action === 'approve'
+      ? html(`<h2>Approved ✓</h2><p style="color:#666">${esc(user.email)} has been approved and notified. You can close this tab.</p>`)
+      : html(`<h2>Rejected ✗</h2><p style="color:#666">${esc(user.email)} has been rejected and notified. You can close this tab.</p>`);
   } catch (err) {
-    ctx.error('notify-approved failed', err);
+    ctx.error('[review] failed', err);
     return { status: 500, body: 'Internal error — check function logs.' };
   }
+}
+
+function esc(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 app.http('admin-approve', {
   methods: ['GET'],
   authLevel: 'anonymous',
-  route: 'users/notify-approved',
+  route: 'users/review',
   handler,
 });

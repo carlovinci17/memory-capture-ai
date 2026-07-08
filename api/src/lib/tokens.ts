@@ -6,13 +6,14 @@ function getSecret(): string {
   return s;
 }
 
-export function generateToken(userId: string): string {
-  return createHmac('sha256', getSecret()).update(userId).digest('hex');
+export function generateToken(userId: string, action: string = ''): string {
+  const payload = action ? `${userId}:${action}` : userId;
+  return createHmac('sha256', getSecret()).update(payload).digest('hex');
 }
 
-export function verifyToken(userId: string, token: string): boolean {
+export function verifyToken(userId: string, token: string, action: string = ''): boolean {
   try {
-    const expected = Buffer.from(generateToken(userId), 'hex');
+    const expected = Buffer.from(generateToken(userId, action), 'hex');
     const actual = Buffer.from(token, 'hex');
     if (expected.length !== actual.length) return false;
     return timingSafeEqual(expected, actual);
