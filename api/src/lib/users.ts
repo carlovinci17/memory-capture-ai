@@ -1,5 +1,6 @@
 import { getUsersContainer } from './cosmos';
 import { sendEmail } from './email';
+import { generateToken } from './tokens';
 
 export interface UserDoc {
   id: string;
@@ -17,6 +18,10 @@ function esc(s: string): string {
 async function notifyAdmin(user: UserDoc): Promise<void> {
   const to = process.env.NOTIFY_EMAIL;
   if (!to) return;
+  const appUrl = (process.env.APP_URL ?? '').replace(/\/$/, '');
+  const token = generateToken(user.id);
+  const approveUrl = `${appUrl}/api/admin/approve?userId=${encodeURIComponent(user.id)}&token=${token}&action=approve`;
+  const denyUrl = `${appUrl}/api/admin/approve?userId=${encodeURIComponent(user.id)}&token=${token}&action=deny`;
   await sendEmail({
     to,
     subject: `New sign-up: ${user.name ?? user.email}`,
@@ -27,7 +32,11 @@ async function notifyAdmin(user: UserDoc): Promise<void> {
   <tr><td style="padding:4px 12px 4px 0;font-weight:600">Email</td><td>${esc(user.email)}</td></tr>
   <tr><td style="padding:4px 12px 4px 0;font-weight:600">Signed up</td><td>${user.createdAt}</td></tr>
 </table>
-<p style="font-family:sans-serif;color:#888;font-size:13px">To approve, update their status to "approved" in Cosmos DB.</p>`,
+<p style="font-family:sans-serif">
+  <a href="${approveUrl}" style="display:inline-block;padding:10px 24px;background:#2e7d32;color:#fff;text-decoration:none;border-radius:999px;font-weight:600;font-size:15px;margin-right:12px">Approve</a>
+  <a href="${denyUrl}" style="display:inline-block;padding:10px 24px;background:#c62828;color:#fff;text-decoration:none;border-radius:999px;font-weight:600;font-size:15px">Deny</a>
+</p>
+<p style="font-family:sans-serif;color:#888;font-size:13px">Clicking Approve will automatically email the user to let them know they can sign in.</p>`,
   });
 }
 
