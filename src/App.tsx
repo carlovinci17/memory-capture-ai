@@ -136,19 +136,7 @@ export default function App() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [cancelling, setCancelling] = useState(false);
-
-  // Countdown before automatically returning to demo mode when access is denied.
-  const [countdown, setCountdown] = useState(3);
-  useEffect(() => {
-    if (!isDenied) return;
-    const id = setInterval(() => setCountdown((n) => n - 1), 1000);
-    return () => clearInterval(id);
-  }, [isDenied]);
-  useEffect(() => {
-    if (!isDenied || countdown > 0) return;
-    setRuntimeMode('demo');
-    window.location.reload();
-  }, [isDenied, countdown]);
+  const [reapplying, setReapplying] = useState(false);
 
   if (!ready) {
     return (
@@ -189,7 +177,7 @@ export default function App() {
     const detail = isPending
       ? "You're in the queue. Once approved you'll get an email — then hit Refresh below to get full access."
       : isDenied
-        ? `Your access request was not approved. Returning to demo mode in ${countdown}…`
+        ? 'Your access request was not approved. You can request access again or continue in demo mode.'
         : isAuth
           ? 'Sign in with your Google account to continue.'
           : isServer
@@ -251,11 +239,35 @@ export default function App() {
                   {cancelling ? 'Cancelling…' : 'Cancel request'}
                 </button>
               </>
-            ) : !isDenied ? (
+            ) : isDenied ? (
+              <>
+                <button
+                  className="btn btn--primary"
+                  disabled={reapplying}
+                  onClick={async () => {
+                    setReapplying(true);
+                    const res = await fetch('/api/users/reapply', { method: 'POST' }).catch(() => null);
+                    if (res?.ok) {
+                      reload();
+                    } else {
+                      setReapplying(false);
+                    }
+                  }}
+                >
+                  {reapplying ? 'Submitting…' : 'Request access again'}
+                </button>
+                <button
+                  className="btn btn--ghost"
+                  onClick={() => { setRuntimeMode('demo'); window.location.reload(); }}
+                >
+                  Continue in demo mode
+                </button>
+              </>
+            ) : (
               <button className="btn btn--primary" onClick={reload}>
                 <Icon name="arrow" size={16} /> Try again
               </button>
-            ) : null}
+            )}
           </div>
         </div>
       </div>

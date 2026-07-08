@@ -25,9 +25,11 @@ async function handler(req: HttpRequest, ctx: InvocationContext): Promise<HttpRe
       if (Number((err as { code?: number | string }).code) !== 404) throw err;
     }
 
+    const sends: Promise<unknown>[] = [];
+
     const notifyTo = process.env.NOTIFY_EMAIL;
     if (notifyTo) {
-      await sendEmail({
+      sends.push(sendEmail({
         to: notifyTo,
         subject: `Approval request cancelled: ${name}`,
         html: `
@@ -37,8 +39,22 @@ async function handler(req: HttpRequest, ctx: InvocationContext): Promise<HttpRe
   <tr><td style="padding:4px 12px 4px 0;font-weight:600">Email</td><td>${email}</td></tr>
 </table>
 <p style="font-family:sans-serif;color:#888;font-size:13px">Their approval record has been removed. They can re-apply by signing in again.</p>`,
-      });
+      }));
     }
+
+    if (email) {
+      sends.push(sendEmail({
+        to: email,
+        subject: 'Memory Capture AI — your request has been cancelled',
+        html: `
+<p style="font-family:sans-serif">Hi${name && name !== email ? ` ${name}` : ''},</p>
+<p style="font-family:sans-serif">Your Memory Capture AI access request has been cancelled as requested.</p>
+<p style="font-family:sans-serif">If you change your mind, you can sign in again at any time to re-submit your request.</p>
+<p style="font-family:sans-serif;color:#888;font-size:13px">If you didn't cancel this request, please reply to this email.</p>`,
+      }));
+    }
+
+    await Promise.allSettled(sends);
 
     ctx.log(`[cancel-request] ${email} cancelled their request`);
     return json(200, { ok: true });

@@ -118,6 +118,26 @@ export async function notifyUserRejected(user: UserDoc): Promise<boolean> {
   });
 }
 
+export async function reapplyUser(userId: string): Promise<boolean> {
+  const container = await getUsersContainer();
+  let user: UserDoc;
+  try {
+    const { resource } = await container.item(userId, userId).read<UserDoc>();
+    if (!resource || resource.status !== 'denied') return false;
+    user = { ...resource, status: 'pending' };
+    delete user.approvedAt;
+    await container.item(userId, userId).replace<UserDoc>(user);
+  } catch (err) {
+    if (Number((err as { code?: number | string }).code) === 404) return false;
+    throw err;
+  }
+  await Promise.all([
+    notifyAdmin(user).catch((e) => console.error('[users] admin re-apply notification failed', e)),
+    notifyUserPending(user).catch((e) => console.error('[users] pending re-apply notification failed', e)),
+  ]);
+  return true;
+}
+
 export async function updateUserStatus(userId: string, status: 'approved' | 'denied'): Promise<void> {
   const container = await getUsersContainer();
   const { resource } = await container.item(userId, userId).read<UserDoc>();
