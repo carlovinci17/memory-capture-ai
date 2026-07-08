@@ -6,7 +6,7 @@ import { Bloom, WatercolorArt } from '../components/Watercolor';
 import { PERSONAS } from '../lib/domain/personas';
 import { initialsOf } from '../lib/format';
 import { useStore } from '../lib/store/StoreProvider';
-import { isDemoMode, setRuntimeMode } from '../lib/demo/demoMode';
+import { isDemoMode } from '../lib/demo/demoMode';
 import type { PersonaId, StorytellerProfile } from '../lib/domain/types';
 
 const STEPS: { icon: IconName; t: string; d: string }[] = [
@@ -24,8 +24,9 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
   const initial = editing ? activeProfile : null;
   const adding = !editing && profiles.length > 0;
 
-  // Show the two-path choice only on a brand-new demo visit (no profiles yet).
-  const showChoice = !editing && profiles.length === 0 && isDemoMode();
+  // Show the two-path choice on a brand-new demo visit OR when arriving via "Get full access".
+  const forceChoice = new URLSearchParams(window.location.search).has('access');
+  const showChoice = !editing && (profiles.length === 0 || forceChoice) && isDemoMode();
   const [step, setStep] = useState<'choice' | 'form'>(showChoice ? 'choice' : 'form');
 
   const [name, setName] = useState(initial?.name ?? '');
@@ -178,7 +179,11 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
                 <div className="ob-path-choice__or">or</div>
                 <button
                   className="btn btn--ghost"
-                  onClick={() => { setRuntimeMode('production'); window.location.href = '/.auth/login/google?post_login_redirect_uri=/home'; }}
+                  onClick={() => {
+                    window.location.href =
+                      '/.auth/login/google?post_login_redirect_uri=' +
+                      encodeURIComponent('/home?mcap_setup=1');
+                  }}
                   style={{ width: '100%' }}
                 >
                   Sign in with Google for full access

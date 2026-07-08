@@ -59,8 +59,15 @@ export function AdminScreen() {
   };
 
   const switchTo = (mode: 'demo' | 'production') => {
-    setRuntimeMode(mode);
-    window.location.reload();
+    if (mode === 'production') {
+      // Go through Google OAuth; App.tsx detects ?mcap_setup=1 on return and sets production mode.
+      window.location.href =
+        '/.auth/login/google?post_login_redirect_uri=' +
+        encodeURIComponent('/home?mcap_setup=1');
+    } else {
+      setRuntimeMode(mode);
+      window.location.reload();
+    }
   };
 
   const signOutAdmin = () => {

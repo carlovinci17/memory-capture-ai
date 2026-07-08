@@ -32,6 +32,10 @@ async function notifyAdmin(user: UserDoc): Promise<void> {
 }
 
 export async function checkApproval(userId: string, email: string, name?: string): Promise<UserDoc['status']> {
+  // Admin email bypasses the queue — no Cosmos write, no notification.
+  const adminEmail = (process.env.NOTIFY_EMAIL ?? '').toLowerCase();
+  if (adminEmail && email.toLowerCase() === adminEmail) return 'approved';
+
   const container = await getUsersContainer();
   try {
     const { resource } = await container.item(userId, userId).read<UserDoc>();

@@ -51,8 +51,7 @@ function AppLayout() {
 
   const inDemoMode = isDemoMode();
   const goFullAccess = () => {
-    setRuntimeMode('production');
-    window.location.href = '/.auth/login/google?post_login_redirect_uri=/home';
+    window.location.href = '/onboarding?access=1';
   };
   const clearDemoData = async () => {
     localStorage.removeItem('mcap_demo_sessions_v1');
@@ -120,6 +119,22 @@ export default function App() {
 
   // Compute denial state early so hooks below can reference it unconditionally.
   const isDenied = !!loadError && !isAdminRoute && /not.?approved|access.?denied/i.test(loadError);
+
+  // After Google OAuth returns with ?mcap_setup=1, verify auth then switch to production mode.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('mcap_setup')) return;
+    window.history.replaceState({}, '', window.location.pathname);
+    fetch('/.auth/me')
+      .then((r) => r.json())
+      .then((d: { clientPrincipal?: { userId?: string } | null }) => {
+        if (d?.clientPrincipal?.userId) {
+          setRuntimeMode('production');
+          window.location.reload();
+        }
+      })
+      .catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Countdown before automatically returning to demo mode when access is denied.
   const [countdown, setCountdown] = useState(3);
@@ -205,12 +220,20 @@ export default function App() {
             }}
           >
             {isAuth ? (
-              <a
-                className="btn btn--primary"
-                href={`/.auth/login/google?post_login_redirect_uri=${encodeURIComponent(window.location.pathname)}`}
-              >
-                Sign in with Google
-              </a>
+              <>
+                <a
+                  className="btn btn--primary"
+                  href={`/.auth/login/google?post_login_redirect_uri=${encodeURIComponent(window.location.pathname)}`}
+                >
+                  Sign in with Google
+                </a>
+                <button
+                  className="btn btn--ghost"
+                  onClick={() => { setRuntimeMode('demo'); window.location.reload(); }}
+                >
+                  Cancel
+                </button>
+              </>
             ) : isPending ? (
               <>
                 <button className="btn btn--primary" onClick={reload}>
