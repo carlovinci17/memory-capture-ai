@@ -54,7 +54,7 @@ export async function checkApproval(userId: string, email: string, name?: string
   }
   const user: UserDoc = { id: userId, email, name, status: 'pending', createdAt: new Date().toISOString() };
   await container.items.create(user);
-  notifyAdmin(user).catch((e) => console.error('[users] notification failed', e));
+  await notifyAdmin(user).catch((e) => console.error('[users] notification failed', e));
   return 'pending';
 }
 
@@ -85,6 +85,6 @@ export async function updateUserStatus(userId: string, status: 'approved' | 'den
     ...(status === 'approved' ? { approvedAt: new Date().toISOString() } : {}),
   });
   if (status === 'approved') {
-    notifyUser(resource).catch((e) => console.error('[users] approval notification failed', e));
+    await notifyUser(resource).catch((e) => console.error('[users] approval notification failed', e));
   }
 }
