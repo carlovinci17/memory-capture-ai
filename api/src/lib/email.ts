@@ -14,10 +14,14 @@ export async function sendEmail(opts: EmailOptions): Promise<void> {
   // Lazy import avoids loading the ACS SDK at startup (previously caused Functions crash).
   const { EmailClient } = await import('@azure/communication-email');
   const client = new EmailClient(connString);
+  // beginSend returns 202 Accepted when ACS queues the email.
+  // We do NOT call pollUntilDone() — polling makes repeated GET requests that
+  // hit ACS rate limits and throw 429 errors. Delivery status is tracked via
+  // EmailSendMailOperational / EmailStatusUpdateOperational in Log Analytics.
   const poller = await client.beginSend({
     senderAddress: from,
     content: { subject: opts.subject, html: opts.html },
     recipients: { to: [{ address: opts.to }] },
   });
-  await poller.pollUntilDone();
+  console.log('[email] ACS accepted send, operationId:', poller.getOperationState().id ?? 'unknown', 'to:', opts.to);
 }
