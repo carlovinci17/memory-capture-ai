@@ -93,7 +93,7 @@ export function TopBar({ eyebrow, title, profile }: TopBarProps) {
               style={{ fontSize: 12, padding: '5px 12px', whiteSpace: 'nowrap' }}
               onClick={() => {
                 setRuntimeMode('demo');
-                window.location.href = '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/onboarding');
+                window.location.href = '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/onboarding?access=1');
               }}
             >
               Sign out

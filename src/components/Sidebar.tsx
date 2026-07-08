@@ -2,7 +2,7 @@
 import { NavLink } from 'react-router-dom';
 import { Icon, type IconName } from './Icon';
 import { A11yMenu } from './A11yMenu';
-import { isAdminAuthenticated, getRuntimeMode } from '../lib/demo/demoMode';
+import { getRuntimeMode, setRuntimeMode } from '../lib/demo/demoMode';
 
 const ITEMS: { to: string; label: string; icon: IconName }[] = [
   { to: '/home', label: 'Home', icon: 'home' },
@@ -61,21 +61,13 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <Icon name="info" className="nav__icon" />
         <span>Privacy & AI</span>
       </NavLink>
-      <NavLink
-        to="/admin"
-        className={({ isActive }) => 'nav__item' + (isActive ? ' is-active' : '')}
-        style={{ margin: '0 8px 4px' }}
-      >
-        <Icon name="lock" className="nav__icon" />
-        <span>Admin</span>
-        {isAdminAuthenticated() && (
-          <Icon name="arrow" size={11} style={{ marginLeft: 'auto', color: 'var(--accent)', transform: 'rotate(-45deg)' }} />
-        )}
-      </NavLink>
       {getRuntimeMode() === 'production' && (
         <button
           className="nav__item"
-          onClick={() => { window.location.href = '/.auth/logout?post_logout_redirect_uri=/'; }}
+          onClick={() => {
+            setRuntimeMode('demo');
+            window.location.href = '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/onboarding?access=1');
+          }}
           style={{ margin: '0 8px 8px' }}
         >
           <Icon name="pause" className="nav__icon" />
