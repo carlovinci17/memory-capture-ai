@@ -61,32 +61,40 @@ export function TopBar({ eyebrow, title, profile }: TopBarProps) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto' }}>
         {googleUser && (
-          <div
-            title={googleUser}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '4px 10px 4px 4px',
-              borderRadius: 20,
-              background: 'var(--accent)',
-              color: '#fff',
-              fontSize: 12,
-              fontWeight: 600,
-              maxWidth: 180,
-              overflow: 'hidden',
-            }}
-          >
-            <span style={{
-              width: 24, height: 24, borderRadius: '50%',
-              background: 'rgba(255,255,255,0.25)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 11, fontWeight: 700, flexShrink: 0,
-            }}>
-              {userInitial}
-            </span>
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {userLabel}
-            </span>
-          </div>
+          <>
+            <div
+              title={googleUser}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '4px 10px 4px 4px',
+                borderRadius: 20,
+                background: 'var(--accent)',
+                color: '#fff',
+                fontSize: 12,
+                fontWeight: 600,
+                maxWidth: 180,
+                overflow: 'hidden',
+              }}
+            >
+              <span style={{
+                width: 24, height: 24, borderRadius: '50%',
+                background: 'rgba(255,255,255,0.25)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, fontWeight: 700, flexShrink: 0,
+              }}>
+                {userInitial}
+              </span>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {userLabel}
+              </span>
+            </div>
+            <a
+              href="/.auth/logout?post_logout_redirect_uri=/"
+              style={{ fontSize: 12, color: 'var(--ink-3)', whiteSpace: 'nowrap', textDecoration: 'none' }}
+            >
+              Sign out
+            </a>
+          </>
         )}
 
         <button
