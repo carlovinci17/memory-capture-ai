@@ -214,7 +214,7 @@ export default function App() {
               <>
                 <a
                   className="btn btn--primary"
-                  href={`/.auth/login/google?post_login_redirect_uri=${encodeURIComponent(window.location.pathname)}`}
+                  href={`/.auth/login/google?prompt=select_account&post_login_redirect_uri=${encodeURIComponent(window.location.pathname)}`}
                 >
                   Sign in with Google
                 </a>

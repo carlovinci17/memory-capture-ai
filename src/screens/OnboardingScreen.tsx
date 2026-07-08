@@ -181,7 +181,7 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
                   className="btn btn--ghost"
                   onClick={() => {
                     window.location.href =
-                      '/.auth/login/google?post_login_redirect_uri=' +
+                      '/.auth/login/google?prompt=select_account&post_login_redirect_uri=' +
                       encodeURIComponent('/home?mcap_setup=1');
                   }}
                   style={{ width: '100%' }}
