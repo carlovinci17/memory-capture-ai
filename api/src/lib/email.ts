@@ -18,7 +18,7 @@ export async function sendEmail(opts: EmailOptions): Promise<void> {
   // We do NOT call pollUntilDone() — polling makes repeated GET requests that
   // hit ACS rate limits and throw 429 errors. Delivery status is tracked via
   // EmailSendMailOperational / EmailStatusUpdateOperational in Log Analytics.
-  const poller = await client.beginSend({
+  await client.beginSend({
     senderAddress: from,
     content: { subject: opts.subject, html: opts.html },
     recipients: { to: [{ address: opts.to }] },
