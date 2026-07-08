@@ -67,10 +67,10 @@ export async function checkApproval(userId: string, email: string, name?: string
   return 'pending';
 }
 
-export async function notifyUser(user: UserDoc): Promise<void> {
+export async function notifyUser(user: UserDoc): Promise<boolean> {
   const appUrl = process.env.APP_URL ?? '';
   const signInUrl = `${appUrl}/.auth/login/google?post_login_redirect_uri=${encodeURIComponent('/home?mcap_setup=1')}`;
-  await sendEmail({
+  return sendEmail({
     to: user.email,
     subject: "You're approved — welcome to Memory Capture AI",
     html: `
@@ -94,6 +94,8 @@ export async function updateUserStatus(userId: string, status: 'approved' | 'den
     ...(status === 'approved' ? { approvedAt: new Date().toISOString() } : {}),
   });
   if (status === 'approved') {
-    await notifyUser(resource).catch((e) => console.error('[users] approval notification failed', e));
+    await notifyUser(resource)
+      .then((sent) => { if (!sent) console.warn('[users] approval notification NOT sent — ACS quota exhausted'); })
+      .catch((e) => console.error('[users] approval notification failed', e));
   }
 }

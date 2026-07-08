@@ -34,7 +34,11 @@ async function handler(req: HttpRequest, ctx: InvocationContext): Promise<HttpRe
     if (user.status !== 'approved') {
       return html(`<h2>Not yet approved</h2><p style="color:#666">Set the user's status to <strong>approved</strong> in Cosmos DB first, then click the link again.</p>`);
     }
-    await notifyUser(user);
+    const sent = await notifyUser(user);
+    if (!sent) {
+      ctx.warn('[notify-approved] ACS quota exhausted — welcome email NOT sent to', user.email);
+      return html(`<h2>Quota exhausted ✗</h2><p style="color:#666">ACS email quota is full (10/hour). Try again in up to an hour — the link still works.</p>`);
+    }
     ctx.log('[notify-approved] welcome email sent to', user.email);
     return html(`<h2>Welcome email sent ✓</h2><p style="color:#666">${user.email} has been notified. You can close this tab.</p>`);
   } catch (err) {
