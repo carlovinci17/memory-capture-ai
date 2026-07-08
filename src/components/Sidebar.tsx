@@ -2,7 +2,7 @@
 import { NavLink } from 'react-router-dom';
 import { Icon, type IconName } from './Icon';
 import { A11yMenu } from './A11yMenu';
-import { getRuntimeMode, setRuntimeMode } from '../lib/demo/demoMode';
+import { getRuntimeMode } from '../lib/demo/demoMode';
 
 const ITEMS: { to: string; label: string; icon: IconName }[] = [
   { to: '/home', label: 'Home', icon: 'home' },
@@ -65,11 +65,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <button
           className="nav__item"
           onClick={() => {
-            console.log('[Auth] Sidebar sign-out — setting demo mode, clearing SWA session');
-            setRuntimeMode('demo');
-            const url = '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/onboarding?access=1');
-            console.log('[Auth] Logout URL:', url);
-            window.location.href = url;
+            // Stay in production mode — /api/profiles will 401 and show "Sign in required"
+            // screen, which lets the user re-authenticate or switch to demo via Cancel.
+            // Previously we set demo mode here, which caused a sign-back-in race where
+            // profiles loaded empty and the user was prompted to re-create their profile.
+            window.location.href = '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/');
           }}
           style={{ margin: '0 8px 8px' }}
         >

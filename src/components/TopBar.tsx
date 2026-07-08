@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Icon } from './Icon';
 import { Avatar } from './Avatar';
 import { useStore } from '../lib/store/StoreProvider';
-import { getRuntimeMode, setRuntimeMode } from '../lib/demo/demoMode';
+import { getRuntimeMode } from '../lib/demo/demoMode';
 import type { StorytellerProfile } from '../lib/domain/types';
 
 interface TopBarProps {
@@ -92,11 +92,7 @@ export function TopBar({ eyebrow, title, profile }: TopBarProps) {
               className="btn btn--ghost"
               style={{ fontSize: 12, padding: '5px 12px', whiteSpace: 'nowrap' }}
               onClick={() => {
-                console.log('[Auth] TopBar sign-out — setting demo mode, clearing SWA session');
-                setRuntimeMode('demo');
-                const url = '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/onboarding?access=1');
-                console.log('[Auth] Logout URL:', url);
-                window.location.href = url;
+                window.location.href = '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/');
               }}
             >
               Sign out
