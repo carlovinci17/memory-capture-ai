@@ -23,5 +23,5 @@ export async function sendEmail(opts: EmailOptions): Promise<void> {
     content: { subject: opts.subject, html: opts.html },
     recipients: { to: [{ address: opts.to }] },
   });
-  console.log('[email] ACS accepted send, operationId:', poller.getOperationState().id ?? 'unknown', 'to:', opts.to);
+  console.log('[email] ACS accepted send to:', opts.to, '| subject:', opts.subject);
 }
