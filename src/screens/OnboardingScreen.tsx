@@ -1,6 +1,6 @@
 // OnboardingScreen.tsx — create / edit / add storyteller.
 import { useRef, useState, type ChangeEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Icon, type IconName } from '../components/Icon';
 import { Bloom, WatercolorArt } from '../components/Watercolor';
 import { PERSONAS } from '../lib/domain/personas';
@@ -434,7 +434,6 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
       {/* footer — always visible on the onboarding screen */}
       <footer className="ob-footer">
         <span>© 2026 Memory Capture AI</span>
-        <Link to="/admin" className="ob-footer__link">Admin Panel</Link>
       </footer>
     </div>
   );

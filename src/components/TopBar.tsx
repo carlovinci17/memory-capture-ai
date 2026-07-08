@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Icon } from './Icon';
 import { Avatar } from './Avatar';
 import { useStore } from '../lib/store/StoreProvider';
-import { getRuntimeMode } from '../lib/demo/demoMode';
+import { getRuntimeMode, setRuntimeMode } from '../lib/demo/demoMode';
 import type { StorytellerProfile } from '../lib/domain/types';
 
 interface TopBarProps {
@@ -88,12 +88,16 @@ export function TopBar({ eyebrow, title, profile }: TopBarProps) {
                 {userLabel}
               </span>
             </div>
-            <a
-              href="/.auth/logout?post_logout_redirect_uri=/"
-              style={{ fontSize: 12, color: 'var(--ink-3)', whiteSpace: 'nowrap', textDecoration: 'none' }}
+            <button
+              className="btn btn--ghost"
+              style={{ fontSize: 12, padding: '5px 12px', whiteSpace: 'nowrap' }}
+              onClick={() => {
+                setRuntimeMode('demo');
+                window.location.href = '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/onboarding');
+              }}
             >
               Sign out
-            </a>
+            </button>
           </>
         )}
 

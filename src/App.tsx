@@ -1,5 +1,5 @@
 // App.tsx — routing + app shell. Guest/local mode; cloud auth lands in M9.
-import { Navigate, Outlet, Route, Routes, Link, useLocation, useParams } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
@@ -15,7 +15,6 @@ import { ProfilesScreen } from './screens/ProfilesScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { MemoryScreen } from './screens/MemoryScreen';
 import { SummaryScreen } from './screens/SummaryScreen';
-import { AdminScreen } from './screens/AdminScreen';
 import { PrivacyScreen } from './screens/PrivacyScreen';
 import type { StorytellerProfile } from './lib/domain/types';
 
@@ -111,14 +110,9 @@ function useActiveProfile(): StorytellerProfile {
 
 export default function App() {
   const { ready, profiles, loadError, reload } = useStore();
-  const location = useLocation();
-
-  // Admin must always be reachable so the user can switch back to demo mode
-  // or sign in, even when the API is failing in production mode.
-  const isAdminRoute = location.pathname === '/admin';
 
   // Compute denial state early so hooks below can reference it unconditionally.
-  const isDenied = !!loadError && !isAdminRoute && /not.?approved|access.?denied/i.test(loadError);
+  const isDenied = !!loadError && /not.?approved|access.?denied/i.test(loadError);
 
   // After Google OAuth returns with ?mcap_setup=1, verify auth then switch to production mode.
   useEffect(() => {
@@ -149,7 +143,7 @@ export default function App() {
     window.location.reload();
   }, [isDenied, countdown]);
 
-  if (!ready && !isAdminRoute) {
+  if (!ready) {
     return (
       <div
         className="ob-stage"
@@ -168,14 +162,11 @@ export default function App() {
         >
           Gathering your journal…
         </p>
-        <footer className="ob-footer">
-          <Link to="/admin" className="ob-footer__link">Admin</Link>
-        </footer>
       </div>
     );
   }
 
-  if (loadError && !isAdminRoute) {
+  if (loadError) {
     const isPending = /pending.?approval/i.test(loadError);
     const isAuth = !isPending && !isDenied && /401|403|unauthorized|forbidden/i.test(loadError);
     const isServer = /5\d\d/.test(loadError);
@@ -189,7 +180,7 @@ export default function App() {
             ? 'Service temporarily unavailable'
             : "We couldn't reach your journal";
     const detail = isPending
-      ? "You're in the queue. You'll receive an email once your account is approved."
+      ? "You're in the queue. Once approved you'll get an email — then hit Refresh below to get full access."
       : isDenied
         ? `Your access request was not approved. Returning to demo mode in ${countdown}…`
         : isAuth
@@ -256,9 +247,6 @@ export default function App() {
             ) : null}
           </div>
         </div>
-        <footer className="ob-footer">
-          <Link to="/admin" className="ob-footer__link">Admin</Link>
-        </footer>
       </div>
     );
   }
@@ -271,7 +259,6 @@ export default function App() {
       />
       <Route path="/onboarding" element={<OnboardingScreen />} />
       <Route path="/edit" element={<OnboardingScreen editing />} />
-      <Route path="/admin" element={<AdminScreen />} />
 
       <Route element={<AppLayout />}>
         <Route path="/home" element={<HomeRoute />} />
