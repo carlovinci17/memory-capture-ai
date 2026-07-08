@@ -20,8 +20,7 @@ async function notifyAdmin(user: UserDoc): Promise<void> {
   if (!to) return;
   const appUrl = (process.env.APP_URL ?? '').replace(/\/$/, '');
   const token = generateToken(user.id);
-  const approveUrl = `${appUrl}/api/users/review?userId=${encodeURIComponent(user.id)}&token=${token}&action=approve`;
-  const denyUrl = `${appUrl}/api/users/review?userId=${encodeURIComponent(user.id)}&token=${token}&action=deny`;
+  const notifyUrl = `${appUrl}/api/users/notify-approved?userId=${encodeURIComponent(user.id)}&token=${token}`;
   await sendEmail({
     to,
     subject: `New sign-up: ${user.name ?? user.email}`,
@@ -32,12 +31,22 @@ async function notifyAdmin(user: UserDoc): Promise<void> {
   <tr><td style="padding:4px 12px 4px 0;font-weight:600">Email</td><td>${esc(user.email)}</td></tr>
   <tr><td style="padding:4px 12px 4px 0;font-weight:600">Signed up</td><td>${user.createdAt}</td></tr>
 </table>
+<p style="font-family:sans-serif;color:#555;font-size:14px">Approve the user in Cosmos DB, then click below to send them their welcome email.</p>
 <p style="font-family:sans-serif">
-  <a href="${approveUrl}" style="display:inline-block;padding:10px 24px;background:#2e7d32;color:#fff;text-decoration:none;border-radius:999px;font-weight:600;font-size:15px;margin-right:12px">Approve</a>
-  <a href="${denyUrl}" style="display:inline-block;padding:10px 24px;background:#c62828;color:#fff;text-decoration:none;border-radius:999px;font-weight:600;font-size:15px">Deny</a>
-</p>
-<p style="font-family:sans-serif;color:#888;font-size:13px">Clicking Approve will automatically email the user to let them know they can sign in.</p>`,
+  <a href="${notifyUrl}" style="display:inline-block;padding:10px 24px;background:#c0602a;color:#fff;text-decoration:none;border-radius:999px;font-weight:600;font-size:15px">Send welcome email to user</a>
+</p>`,
   });
+}
+
+export async function getUserDoc(userId: string): Promise<UserDoc | undefined> {
+  const container = await getUsersContainer();
+  try {
+    const { resource } = await container.item(userId, userId).read<UserDoc>();
+    return resource;
+  } catch (err) {
+    if (Number((err as { code?: number | string }).code) === 404) return undefined;
+    throw err;
+  }
 }
 
 export async function checkApproval(userId: string, email: string, name?: string): Promise<UserDoc['status']> {
@@ -58,7 +67,7 @@ export async function checkApproval(userId: string, email: string, name?: string
   return 'pending';
 }
 
-async function notifyUser(user: UserDoc): Promise<void> {
+export async function notifyUser(user: UserDoc): Promise<void> {
   const appUrl = process.env.APP_URL ?? '';
   const signInUrl = `${appUrl}/.auth/login/google?post_login_redirect_uri=${encodeURIComponent('/home?mcap_setup=1')}`;
   await sendEmail({

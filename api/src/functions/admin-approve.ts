@@ -1,9 +1,9 @@
-// admin-approve.ts — GET /api/users/review?userId=&token=&action=approve|deny
-// Called from the one-click links in the approval email. No SWA auth required;
-// security comes from the HMAC-signed token.
+// admin-approve.ts — GET /api/users/notify-approved?userId=&token=
+// After manually approving a user in Cosmos DB, click the link in the admin
+// notification email to send them their welcome email. Does NOT modify the DB.
 import { app, type HttpRequest, type HttpResponseInit, type InvocationContext } from '@azure/functions';
 import { verifyToken } from '../lib/tokens';
-import { updateUserStatus } from '../lib/users';
+import { notifyUser, getUserDoc } from '../lib/users';
 import { isCosmosConfigured } from '../lib/cosmos';
 
 const html = (body: string): HttpResponseInit => ({
@@ -15,11 +15,8 @@ const html = (body: string): HttpResponseInit => ({
 async function handler(req: HttpRequest, ctx: InvocationContext): Promise<HttpResponseInit> {
   const userId = req.query.get('userId') ?? '';
   const token = req.query.get('token') ?? '';
-  const action = req.query.get('action');
 
-  if (!userId || !token || (action !== 'approve' && action !== 'deny')) {
-    return { status: 400, body: 'Missing or invalid parameters.' };
-  }
+  if (!userId || !token) return { status: 400, body: 'Missing parameters.' };
 
   let valid: boolean;
   try {
@@ -27,16 +24,21 @@ async function handler(req: HttpRequest, ctx: InvocationContext): Promise<HttpRe
   } catch {
     return { status: 503, body: 'ADMIN_APPROVE_SECRET is not configured on this server.' };
   }
-  if (!valid) return { status: 403, body: 'Invalid or expired approval token.' };
+  if (!valid) return { status: 403, body: 'Invalid or expired token.' };
 
   if (!isCosmosConfigured()) return { status: 503, body: 'Database not configured.' };
 
   try {
-    await updateUserStatus(userId, action === 'approve' ? 'approved' : 'denied');
-    const verb = action === 'approve' ? 'approved ✓' : 'denied ✗';
-    return html(`<h2>User ${verb}</h2><p style="color:#666">You can close this tab.</p>`);
+    const user = await getUserDoc(userId);
+    if (!user) return html('<h2>User not found ✗</h2><p style="color:#666">They may have cancelled their request.</p>');
+    if (user.status !== 'approved') {
+      return html(`<h2>Not yet approved</h2><p style="color:#666">Set the user's status to <strong>approved</strong> in Cosmos DB first, then click the link again.</p>`);
+    }
+    await notifyUser(user);
+    ctx.log('[notify-approved] welcome email sent to', user.email);
+    return html(`<h2>Welcome email sent ✓</h2><p style="color:#666">${user.email} has been notified. You can close this tab.</p>`);
   } catch (err) {
-    ctx.error('admin-approve failed', err);
+    ctx.error('notify-approved failed', err);
     return { status: 500, body: 'Internal error — check function logs.' };
   }
 }
@@ -44,6 +46,6 @@ async function handler(req: HttpRequest, ctx: InvocationContext): Promise<HttpRe
 app.http('admin-approve', {
   methods: ['GET'],
   authLevel: 'anonymous',
-  route: 'users/review',
+  route: 'users/notify-approved',
   handler,
 });
