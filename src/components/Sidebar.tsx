@@ -77,7 +77,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <footer className="sidebar__footer">
         <p>© 2026 Memory Capture AI</p>
         <p>
-          <a href="/how-it-works">How it works</a>
+          <a href="/how-it-works" target="_blank" rel="noopener noreferrer">How it works</a>
         </p>
         <p>
           By{' '}
