@@ -440,6 +440,7 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
       {/* footer — always visible on the onboarding screen */}
       <footer className="ob-footer">
         <span>© 2026 Memory Capture AI</span>
+        <a className="ob-footer__link" href="/how-it-works">How it works</a>
       </footer>
     </div>
   );

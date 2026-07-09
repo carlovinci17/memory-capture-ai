@@ -77,6 +77,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <footer className="sidebar__footer">
         <p>© 2026 Memory Capture AI</p>
         <p>
+          <a href="/how-it-works">How it works</a>
+        </p>
+        <p>
           By{' '}
           <a href="https://carlovinci.com.au" target="_blank" rel="noopener noreferrer">
             Carlo Vinci
