@@ -17,6 +17,7 @@
     "exclude": ["/api/*", "/assets/*", "/*.{css,js,png,jpg,svg,ico,woff,woff2}"]
   },
   "routes": [
+    { "route": "/how-it-works", "rewrite": "/how-it-works.html" },
     { "route": "/login", "rewrite": "/.auth/login/google" },
     { "route": "/logout", "rewrite": "/.auth/logout" },
     { "route": "/.auth/login/github", "statusCode": 404 },
