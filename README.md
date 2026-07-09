@@ -4,9 +4,6 @@ A gentle, living memory journal. A warm AI "companion" interviews a storyteller 
 answers are transcribed, kept **exactly as said**, and turned into soft watercolor **memory cards** with the
 people, places, and dates they mention extracted automatically.
 
-> Built from the approved design handoff in [`design_handoff_mvp/`](design_handoff_mvp/) — the prototype there
-> is the UX + visual source of truth; `design_handoff_mvp/Engineering Scope.md` is the engineering spec.
-
 ## Tech stack
 
 - **Front end:** Vite + React 18 + TypeScript (SPA).
@@ -214,7 +211,7 @@ sign-out control in the Sidebar/TopBar reverses this (`setRuntimeMode('demo')` +
 
 ## Project status
 
-Phase 1 MVP, built milestone by milestone (see `design_handoff_mvp/Engineering Scope.md` §17):
+Phase 1 MVP, built milestone by milestone:
 
 - [x] **M1** — Scaffold, tooling, CI, SWA config.
 - [x] **M2** — Design-system port (tokens, watercolor, icons).
