@@ -81,7 +81,7 @@ export function TopBar({ eyebrow, title, profile }: TopBarProps) {
                 onClick={() => {
                   setRuntimeMode('demo');
                   window.location.href =
-                    '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/');
+                    '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/onboarding?access=1');
                 }}
               >
                 <span

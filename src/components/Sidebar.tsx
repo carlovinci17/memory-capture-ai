@@ -66,7 +66,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           className="nav__item"
           onClick={() => {
             setRuntimeMode('demo');
-            window.location.href = '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/');
+            window.location.href = '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/onboarding?access=1');
           }}
           style={{ margin: '0 8px 8px' }}
         >
