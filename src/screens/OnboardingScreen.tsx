@@ -25,14 +25,15 @@ export function OnboardingScreen({ editing = false }: { editing?: boolean }) {
   const params = new URLSearchParams(window.location.search);
   const forceAdd = params.has('new');
   const adding = !editing && profiles.length > 0 && forceAdd;
-
-  // Redirect to home if the user already has profiles and isn't explicitly adding or editing.
-  useEffect(() => {
-    if (!editing && profiles.length > 0 && !forceAdd) navigate('/home', { replace: true });
-  }, [editing, profiles.length, forceAdd, navigate]);
-
   // Show the two-path choice on a brand-new demo visit OR when arriving via "Get full access".
   const forceChoice = params.has('access');
+
+  // Redirect to home if the user already has profiles and isn't explicitly adding, editing,
+  // or here for the demo/Google choice screen ("Get full access").
+  useEffect(() => {
+    if (!editing && profiles.length > 0 && !forceAdd && !forceChoice) navigate('/home', { replace: true });
+  }, [editing, profiles.length, forceAdd, forceChoice, navigate]);
+
   const showChoice = !editing && (profiles.length === 0 || forceChoice) && isDemoMode();
   const [step, setStep] = useState<'choice' | 'form'>(showChoice ? 'choice' : 'form');
 
