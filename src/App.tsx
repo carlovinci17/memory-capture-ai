@@ -118,18 +118,13 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (!params.has('mcap_setup')) return;
-    console.log('[Auth] ?mcap_setup=1 detected — fetching /.auth/me');
     window.history.replaceState({}, '', window.location.pathname);
     fetch('/.auth/me')
       .then((r) => r.json())
       .then((d: { clientPrincipal?: { userId?: string; userDetails?: string } | null }) => {
-        console.log('[Auth] /.auth/me response:', JSON.stringify(d));
         if (d?.clientPrincipal?.userId) {
-          console.log('[Auth] userId found:', d.clientPrincipal.userId, '(' + (d.clientPrincipal.userDetails ?? 'no email') + ') — switching to production mode');
           setRuntimeMode('production');
           window.location.reload();
-        } else {
-          console.warn('[Auth] no userId in /.auth/me — staying in demo mode');
         }
       })
       .catch((e) => console.error('[Auth] /.auth/me fetch failed:', e));
@@ -218,7 +213,6 @@ export default function App() {
                 <a
                   className="btn btn--primary"
                   href={`/.auth/login/google?prompt=select_account&post_login_redirect_uri=${encodeURIComponent(window.location.pathname)}`}
-                  onClick={() => console.log('[Auth] Sign in from error screen →', `/.auth/login/google?prompt=select_account&post_login_redirect_uri=${encodeURIComponent(window.location.pathname)}`)}
                 >
                   Sign in with Google
                 </a>

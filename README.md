@@ -11,12 +11,17 @@ people, places, and dates they mention extracted automatically.
 
 - **Front end:** Vite + React 18 + TypeScript (SPA).
 - **Routing:** `react-router-dom`.
-- **API (milestone 6+):** Azure Functions (TypeScript), managed by Azure Static Web Apps.
-- **AI:** Azure AI Foundry (`gpt-4o-mini`) — next-question, follow-up suggestions, structured extraction, summary.
+- **API:** Azure Functions (TypeScript, v4 programming model), managed by Azure Static Web Apps.
+- **AI (text):** Azure AI Foundry (`gpt-4o-mini`) — next-question, follow-up suggestions, structured extraction, summary.
+- **AI (image):** Azure OpenAI `gpt-image-1` — a square watercolor illustration generated per captured memory,
+  stored in Blob; degrades silently to a procedural SVG watercolor when not configured.
 - **Voice:** Azure AI Speech (STT + optional TTS) via short-lived server-minted tokens.
-- **Data:** localStorage repository today; Azure Cosmos DB (free tier) / Table Storage + Blob later, behind a
-  swappable repository interface.
-- **Auth:** Azure Static Web Apps built-in auth; guest/local mode preserves the offline experience.
+- **Data:** localStorage repository in guest/demo mode; Azure Cosmos DB (free tier, `accountId`-partitioned) +
+  Blob Storage in production, behind a swappable repository interface.
+- **Auth:** Azure Static Web Apps built-in auth, **Google** provider only, gated by an admin approval workflow —
+  see [Authentication](#authentication-google-sign-in--admin-approval) below. Guest/demo mode needs no auth and
+  preserves the fully offline experience.
+- **Email:** Azure Communication Services — transactional email for the sign-up approval flow.
 - **Hosting / CI:** Azure Static Web Apps (free tier) via GitHub Actions.
 
 Everything targets free / near-free tiers (expected demo cost ≈ $0–2/month).
@@ -132,11 +137,11 @@ token minted by `/api/speech/token`.
 
 ## Enabling cloud persistence (Cosmos DB + Blob) — optional
 
-By default profiles live in the browser (`localStorage`, guest mode). Set `VITE_AUTH_PROVIDER=swa` to
-persist them in **Azure Cosmos DB** via the `/api/profiles` Functions, with storyteller photos in
-**Blob Storage** (kept out of Cosmos's 2 MB doc limit). Profiles are partitioned by `accountId`; until
-auth lands (M9) everything uses a shared `guest` partition. The repository interface is unchanged, so
-screens don't care which backing is active.
+By default profiles live in the browser (`localStorage`, guest/demo mode). Production mode persists them in
+**Azure Cosmos DB** via the `/api/profiles` Functions, with storyteller photos in **Blob Storage** (kept out of
+Cosmos's 2 MB doc limit). Profiles are partitioned by `accountId`, which is the signed-in Google user's SWA
+principal ID (see [Authentication](#authentication-google-sign-in--admin-approval)). The repository interface
+is unchanged, so screens don't care which backing is active.
 
 ```bash
 # Cosmos DB free tier (1000 RU/s + 25 GB, $0) — NoSQL (Core) API
@@ -150,22 +155,62 @@ az storage account show-connection-string -n memorycapturestore -g memory-captur
 ```
 
 Add `COSMOS_CONNECTION_STRING` and `BLOB_CONNECTION_STRING` to `api/local.settings.json` (local) and
-SWA application settings (deployed), and set `VITE_AUTH_PROVIDER=swa` in `.env`. The app creates the
-database, container, and photo container automatically on first use.
+SWA application settings (deployed). The app creates the database, container, and photo container
+automatically on first use. Switching a running app between demo (localStorage) and production
+(Cosmos/Google) mode is done at runtime from the onboarding screen — see below — not via a rebuild.
 
-## Authentication (GitHub sign-in)
+## Enabling AI image generation (`gpt-image-1`) — optional
 
-In cloud mode (`VITE_AUTH_PROVIDER=swa`) the app uses **Azure Static Web Apps built-in auth** with the
-**GitHub** provider. Unauthenticated visitors see a sign-in screen; once signed in, profiles are
-scoped to their account (`/api/profiles*` and `/api/uploads/*` return `401` without a valid
-principal). Guest mode (default) has no auth and runs fully offline.
+After a memory is captured, `POST /api/memories/illustrate` (`api/src/functions/illustrate.ts`) asks
+Azure OpenAI's `gpt-image-1` for a square watercolor illustration (prompt built from the memory's title,
+summary, theme, and era) and uploads it to Blob, returning a permanent URL + a 400px thumbnail. With no
+image deployment configured it returns `503` and the card keeps its procedurally-generated SVG watercolor
+— illustration is a progressive enhancement, never a blocker.
 
-- Sign in / out: `/.auth/login/github` and `/.auth/logout` (also `/login` and `/logout` shortcuts).
-- No secrets to configure — GitHub auth is provided by the SWA platform out of the box.
+`gpt-image-1` isn't available in every region. If it isn't available alongside your chat deployment, create
+a second Azure OpenAI resource in a supported region (e.g. `eastus`) and set `AZURE_OPENAI_IMAGE_ENDPOINT` /
+`AZURE_OPENAI_IMAGE_API_KEY` / `AZURE_OPENAI_IMAGE_DEPLOYMENT`; otherwise leave them empty to reuse the main
+`AZURE_OPENAI_ENDPOINT` / `AZURE_OPENAI_API_KEY`. Requires Blob Storage to also be configured.
+
+## Authentication (Google sign-in + admin approval)
+
+In production mode the app uses **Azure Static Web Apps built-in auth** with the **Google** provider
+(GitHub/AAD/Twitter are explicitly disabled in `staticwebapp.config.json`). Unauthenticated visitors see a
+sign-in screen; once signed in, profiles are scoped to their account (`/api/profiles*` and `/api/uploads/*`
+return `401` without a valid principal). Guest/demo mode has no auth and runs fully offline.
+
+Sign-in is gated by an **admin approval workflow** (`api/src/lib/users.ts`) — this is a private, invite-only
+deployment, not open sign-up:
+
+1. A new Google sign-in creates a `pending` user record in Cosmos (the `NOTIFY_EMAIL` address is
+   auto-approved as the app owner). Two emails go out via Azure Communication Services: an **admin
+   notification** with single-use Approve/Reject links (HMAC-signed with `ADMIN_APPROVE_SECRET`), and a
+   **"request received"** confirmation to the user.
+2. The admin clicks a link → `GET /api/users/review` (`admin-approve.ts`) verifies the token, updates the
+   user's status in Cosmos, and sends the matching outcome email (**approved** with a sign-in link, or
+   **rejected**).
+3. A denied user can re-apply (`POST /api/users/reapply`), which resets them to `pending` and re-fires the
+   notification pair. A pending user can also cancel their own request (`POST /api/users/cancel`), which
+   deletes the record and notifies both sides.
+4. All email sends are soft-fail — logged and skipped, never a thrown error — including an honest warning
+   when the Azure Communication Services Managed Domain's 10-sends/hour quota is hit.
+
+- Sign in / out: `/.auth/login/google` and `/.auth/logout` (also `/login` and `/logout` shortcuts).
+- Requires `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` as **SWA application settings** (Azure portal → your
+  SWA → Configuration), registered per `staticwebapp.config.json`'s `identityProviders.google` block.
 - The public AI + speech endpoints stay anonymous but are **rate-limited per IP** (`api/src/lib/rateLimit.ts`)
   to cap abuse/spend; the client also enforces a per-session budget.
 
-Locally, the SWA CLI emulates auth: visit `http://localhost:4281/.auth/login/github` to mock a login.
+Locally, the SWA CLI emulates auth: visit `http://localhost:4281/.auth/login/google` to mock a login.
+
+## Switching a live deployment between demo and production mode
+
+The choice between **Demo mode** (data stored on the visiting device only, safe for public visitors) and
+**Production mode** (data in Azure Cosmos DB, gated by Google sign-in + approval) is made from the onboarding
+screen (`src/screens/OnboardingScreen.tsx`, reached at `/onboarding?access=1`), not via an env var rebuild —
+choosing "Sign in with Google" there kicks off `/.auth/login/google?...&post_login_redirect_uri=/home?mcap_setup=1`,
+and `App.tsx` flips `mcap_mode` to `production` in `localStorage` once that redirect confirms a session. A
+sign-out control in the Sidebar/TopBar reverses this (`setRuntimeMode('demo')` + `/.auth/logout`).
 
 ## Project status
 
@@ -193,3 +238,10 @@ The app is fully usable offline today: create/edit/switch/delete storytellers, r
 both modes, capture verbatim memory cards, and review session summaries — all persisted to
 `localStorage`. The repository (`src/lib/db`) and interview engine (`src/lib/ai`) sit behind
 interfaces so the Azure implementations drop in without touching screen code.
+
+**Post-launch additions (beyond the original 11 milestones):**
+- AI-generated watercolor illustrations per memory (`gpt-image-1` → Blob), with SVG fallback.
+- Auth provider switched from GitHub to **Google**, plus an admin **approval workflow** gating
+  production sign-in (pending/approved/denied, Azure Communication Services email, one-click
+  admin approve/reject, user reapply/cancel) — see [Authentication](#authentication-google-sign-in--admin-approval).
+- Runtime demo/production mode switching from the onboarding screen (`?access=1`), independent of rebuilds.

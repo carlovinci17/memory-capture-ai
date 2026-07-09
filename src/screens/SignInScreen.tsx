@@ -24,7 +24,7 @@ export function SignInScreen({ onSignIn }: { onSignIn: () => void }) {
           your account.
         </p>
         <button className="btn btn--primary" onClick={onSignIn} style={{ margin: '0 auto' }}>
-          <Icon name="arrow" size={16} /> Sign in with GitHub
+          <Icon name="arrow" size={16} /> Sign in with Google
         </button>
       </div>
     </div>

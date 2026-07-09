@@ -15,20 +15,21 @@ flowchart TB
   subgraph BROWSER["🌐 Browser — React 18 SPA (Vite + TypeScript)"]
     direction TB
 
-    subgraph SCREENS["Screens"]
+    subgraph SCREENS["Screens (react-router-dom)"]
       direction LR
-      S1["Onboarding\n/onboarding"]
+      S1["Onboarding\n/onboarding\n(?access=1 = demo/Google choice)"]
       S2["Home\n/home"]
       S3["Interview\n/interview ★"]
       S4["Summary\n/summary"]
-      S5["Profiles\n/profiles"]
+      S5["Profiles + Profile\n/profiles · /profiles/:id"]
       S6["Memory Detail\n/memories/:id"]
-      S7["Admin\n/admin"]
+      S7["Privacy & AI\n/privacy"]
+      S8["Sign-In\n(AuthGate, pre-router —\nshown when SWA session is anonymous)"]
     end
 
     subgraph STATE["Global State"]
       STORE["StoreProvider\nprofiles · activeProfile\nmemories · sessions"]
-      AUTH["AuthProvider\nguest | GitHub OAuth\n/.auth/me"]
+      AUTH["AuthProvider\nguest | Google OAuth\n/.auth/me"]
     end
 
     subgraph SPEECH_CLIENT["Azure Speech SDK (lazy, browser)"]
@@ -55,7 +56,7 @@ flowchart TB
   subgraph SWA["☁️ Azure Static Web Apps — jolly-moss-08debec00"]
     direction TB
     CDN["CDN Edge\nServes Vite SPA bundle"]
-    EDGE_AUTH["Built-in Auth\nGitHub OAuth\n/.auth/login/github\n/.auth/me · /.auth/logout"]
+    EDGE_AUTH["Built-in Auth\nGoogle OAuth only\n(GitHub/AAD/Twitter disabled)\n/.auth/login/google\n/.auth/me · /.auth/logout"]
     ROUTE_RULES["Route Rules\n/api/profiles → authenticated only\n/api/uploads → authenticated only\n/api/* → open"]
     CICD["CI/CD\nGitHub Actions → npm build → deploy\non every push to main"]
   end
@@ -88,6 +89,13 @@ flowchart TB
       FN_SPEECH["speech-token.ts\nGET /api/speech/token\nMint 10-min JWT for Speech SDK"]
     end
 
+    subgraph APPROVAL_FN["Sign-up Approval"]
+      FN_REVIEW["admin-approve.ts\nGET /api/users/review\nHMAC-verified one-click\napprove/reject from email"]
+      FN_REAPPLY["reapply.ts\nPOST /api/users/reapply\nDenied user re-submits"]
+      FN_CANCEL["cancel-request.ts\nPOST /api/users/cancel\nPending user withdraws"]
+      FN_EMAILTEST["email-test.ts\nGET /api/email/test\nACS send diagnostics"]
+    end
+
   end
 
   SWA -- "routes /api/*" --> FUNCTIONS
@@ -100,6 +108,7 @@ flowchart TB
 
     subgraph COSMOS["Azure Cosmos DB\nmemorycapture database"]
       COL_PROFILES["profiles container\npartition key: /accountId\nStorytellerProfile docs\n+ nested Memory arrays"]
+      COL_USERS["users container\nid = accountId\nstatus: pending · approved · denied"]
     end
 
     subgraph BLOB["Azure Blob Storage\nmemorycapturestore"]
@@ -112,6 +121,21 @@ flowchart TB
   PROFILE_FN --> COL_PROFILES
   FN_PHOTO --> BLOB_PHOTOS
   FN_ILLUSTRATE --> BLOB_ART
+  APPROVAL_FN --> COL_USERS
+
+  %% ── LAYER 4b: NOTIFICATIONS ──────────────────────────────────────────
+  subgraph NOTIFY["✉️ Azure Communication Services"]
+    ACS["Email (Managed Domain)\n10 sends/hour quota\nsoft-fails on 429"]
+  end
+
+  FN_REVIEW -- "status update" --> COL_USERS
+  COL_USERS -- "checkApproval() on\nfirst authenticated request" --> ACS
+  FN_REVIEW --> ACS
+  FN_REAPPLY --> ACS
+  FN_CANCEL --> ACS
+  FN_EMAILTEST --> ACS
+  ACS -- "admin notify + approve/reject links" --> ADMIN_INBOX["Admin\n(NOTIFY_EMAIL)"]
+  ACS -- "pending / approved / rejected" --> STORYTELLER_INBOX["Storyteller's inbox"]
 
   %% ── LAYER 5: AZURE AI SERVICES ──────────────────────────────────────
   subgraph AI["🤖 Azure AI Services"]
@@ -150,10 +174,11 @@ flowchart TB
 
   %% ── LAYER 6: EXTERNAL SERVICES ──────────────────────────────────────
   subgraph EXTERNAL["🔗 External Services"]
-    GITHUB["GitHub\nOAuth provider\nSource repo\nGitHub Actions CI/CD"]
+    GOOGLE["Google\nOAuth provider\n(sign-in only)"]
+    GITHUB["GitHub\nSource repo\nGitHub Actions CI/CD"]
   end
 
-  EDGE_AUTH --> GITHUB
+  EDGE_AUTH --> GOOGLE
   GITHUB --> CICD
 
   %% ── KEY DATA FLOWS ───────────────────────────────────────────────────
@@ -162,7 +187,7 @@ flowchart TB
     F1["① Voice Interview Loop\nMic → STT → answer text\n→ extract (gpt-4o-mini)\n→ Memory card created\n→ illustrate (gpt-image-1)\n→ Blob URL → card updated"]
     F2["② AI Question Flow\nExtraction complete\n→ next-question (gpt-4o-mini, streaming)\n→ question rendered\n→ TTS speaks aloud\n→ mic auto-restarts"]
     F3["③ Profile Persistence\nStoreProvider mutation\n→ /api/profiles (production)\nor localStorage (demo mode)"]
-    F4["④ Auth Flow (production)\nAdmin panel\n→ /.auth/login/github\n→ GitHub OAuth\n→ x-ms-client-principal injected\n→ Functions accept request"]
+    F4["④ Auth + Approval Flow (production)\nOnboarding ?access=1 → /.auth/login/google\n→ Google OAuth → x-ms-client-principal\n→ first request creates 'pending' user\n→ ACS emails admin + user\n→ admin clicks approve/reject link\n→ ACS emails outcome → user signs in"]
   end
 
   %% ── STYLING ──────────────────────────────────────────────────────────
@@ -173,13 +198,15 @@ flowchart TB
   classDef external fill:#37474F,stroke:#263238,color:#fff
   classDef flow fill:#E65100,stroke:#BF360C,color:#fff
   classDef highlight fill:#F57F17,stroke:#E65100,color:#000
+  classDef notify fill:#AD1457,stroke:#880E4F,color:#fff
 
   class CDN,EDGE_AUTH,ROUTE_RULES,CICD azure
-  class FN_PROFILES,FN_PROFILE_ID,FN_EXTRACT,FN_NEXT_Q,FN_SUGGEST,FN_SUMMARY,FN_ILLUSTRATE,FN_PHOTO,FN_SPEECH azure
+  class FN_PROFILES,FN_PROFILE_ID,FN_EXTRACT,FN_NEXT_Q,FN_SUGGEST,FN_SUMMARY,FN_ILLUSTRATE,FN_PHOTO,FN_SPEECH,FN_REVIEW,FN_REAPPLY,FN_CANCEL,FN_EMAILTEST azure
   class OAI_EXTRACT,OAI_NEXT_Q,OAI_SUGGEST,OAI_SUMMARY,OAI_IMAGE,SPEECH_TOKEN_SVC,SPEECH_STT,SPEECH_TTS ai
-  class COL_PROFILES,BLOB_PHOTOS,BLOB_ART data
+  class COL_PROFILES,COL_USERS,BLOB_PHOTOS,BLOB_ART data
   class STORE,AUTH,STT,TTS,HTTP_ENG,FALLBACK,ENGINE browser
-  class GITHUB external
+  class GOOGLE,GITHUB external
+  class ACS,ADMIN_INBOX,STORYTELLER_INBOX notify
   class F1,F2,F3,F4 flow
   class S3 highlight
 ```
@@ -190,14 +217,15 @@ flowchart TB
 
 | Layer | Service | Purpose |
 |---|---|---|
-| Frontend | React 18 + Vite + TypeScript | SPA — 8 screens, React Router v6 |
+| Frontend | React 18 + Vite + TypeScript | SPA — 7 routed screens + Sign-In gate, React Router v6 |
 | Frontend | Azure Speech SDK (browser) | STT continuous recognition + TTS playback |
 | Hosting | Azure Static Web Apps | CDN hosting + managed Functions + built-in auth |
-| Auth | GitHub OAuth (via SWA) | Owner authentication for production mode |
+| Auth | Google OAuth (via SWA) | Sign-in for production mode; gated by an admin approval workflow |
 | CI/CD | GitHub Actions | Lint → typecheck → test → build → deploy |
-| Functions | Azure Functions v4 TypeScript | 9 API endpoints (profiles, AI, media, speech) |
-| Database | Azure Cosmos DB | Profiles + memories (NoSQL, partitioned by account) |
+| Functions | Azure Functions v4 TypeScript | 13 API endpoints (profiles, AI, media, speech, sign-up approval) |
+| Database | Azure Cosmos DB | `profiles` (memories, NoSQL, partitioned by account) + `users` (approval status) |
 | Storage | Azure Blob Storage | Profile photos + AI-generated illustrations |
+| Email | Azure Communication Services | Sign-up approval emails (admin notify, pending, approved/rejected) |
 | AI — Chat | Azure OpenAI gpt-4o-mini | Question generation, memory extraction, summaries |
 | AI — Image | Azure OpenAI gpt-image-1 | Watercolor illustration per captured memory |
 | AI — Speech | Azure AI Speech (australiaeast) | STT from microphone + TTS persona voices |
