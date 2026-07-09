@@ -75,7 +75,6 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </button>
       )}
       <footer className="sidebar__footer">
-        <p>© 2026 Memory Capture AI</p>
         <p>
           <a href="/how-it-works" target="_blank" rel="noopener noreferrer">How it works</a>
         </p>
@@ -85,6 +84,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             Carlo Vinci
           </a>
         </p>
+        <p>© 2026 Memory Capture AI</p>
       </footer>
     </aside>
   );
