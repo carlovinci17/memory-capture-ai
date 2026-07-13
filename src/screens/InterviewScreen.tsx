@@ -278,6 +278,10 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   // Voice (Azure AI Speech) — optional enhancement; typing always works.
   const [voiceAvailable, setVoiceAvailable] = useState(false);
   const [voiceChecking, setVoiceChecking] = useState(true);
+  // Surfaces the last mic/recognition failure reason inline — recognition errors
+  // otherwise degrade silently (by design), which makes them undiagnosable from
+  // the field. Cleared as soon as listening starts again cleanly.
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   // The definitive in-flight/resolved availability check. Topic selection can
   // happen before the mount-time isSpeechAvailable() check settles, so callers
   // await this promise instead of reading the (possibly still-stale) state above.
@@ -439,6 +443,7 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   const startListening = async () => {
     if (listeningRef.current || pausedRef.current) return;
     baseTextRef.current = text;
+    setVoiceError(null);
     const rec = await startRecognition({
       onInterim: (t) => {
         clearSilenceTimer();
@@ -456,7 +461,10 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
           }
         }, 2500);
       },
-      onError: () => stopListening(),
+      onError: (detail) => {
+        if (mountedRef.current) setVoiceError(detail);
+        stopListening();
+      },
     });
     if (!mountedRef.current) {
       rec?.stop();
@@ -1133,7 +1141,9 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
             ? null
             : !voiceAvailable
               ? '🔇 Voice is unavailable here — you can type your answers. (Voice needs the running API: open the app on the SWA port, e.g. http://localhost:4281, not the Vite port.)'
-              : mode === 'manual'
+              : voiceError
+                ? `🎙️ Microphone stopped: ${voiceError} — check your browser's microphone permission for this site, then press the mic button to try again.`
+                : mode === 'manual'
               ? askingNow
                 ? `Manual mode: type each question you ask so it's recorded, then capture ${first}'s answer. Suggested questions (right) are optional.`
                 : `Now type ${first}'s answer and press Enter — it's saved word for word. Then it's your turn to ask again.`

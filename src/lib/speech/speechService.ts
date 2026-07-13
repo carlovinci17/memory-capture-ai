@@ -67,9 +67,17 @@ export async function startRecognition(handlers: RecognitionHandlers): Promise<R
     recognizer.recognized = (_s, e) => {
       if (e.result.text) handlers.onFinal(e.result.text);
     };
-    recognizer.canceled = (_s, e) => handlers.onError?.(e.errorDetails || 'canceled');
+    recognizer.canceled = (_s, e) => {
+      // eslint-disable-next-line no-console -- STT failures otherwise leave no trace at all
+      console.warn('[speech] recognition canceled:', e.reason, e.errorDetails);
+      handlers.onError?.(e.errorDetails || String(e.reason));
+    };
 
-    recognizer.startContinuousRecognitionAsync();
+    recognizer.startContinuousRecognitionAsync(
+      undefined,
+      // eslint-disable-next-line no-console
+      (err) => { console.warn('[speech] startContinuousRecognitionAsync failed:', err); handlers.onError?.(String(err)); },
+    );
     return {
       stop() {
         recognizer.stopContinuousRecognitionAsync(
@@ -79,6 +87,8 @@ export async function startRecognition(handlers: RecognitionHandlers): Promise<R
       },
     };
   } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[speech] startRecognition failed:', err);
     handlers.onError?.(String(err));
     return null;
   }
