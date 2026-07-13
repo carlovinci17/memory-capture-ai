@@ -215,6 +215,13 @@ function randomBetween(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+// Read-aloud preference: unset (first visit, or cleared by "Reset / Clear my
+// data") defaults to on; otherwise honor whatever the storyteller last chose.
+function readTtsPreference(): boolean {
+  const raw = localStorage.getItem('mcap_tts');
+  return raw === null ? true : raw === '1';
+}
+
 const PALETTES = [
   ['#D98C8C', '#E2A07E', '#E8C285'],
   ['#7FA8B0', '#A9BB97', '#E8C285'],
@@ -271,9 +278,15 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   // Voice (Azure AI Speech) — optional enhancement; typing always works.
   const [voiceAvailable, setVoiceAvailable] = useState(false);
   const [voiceChecking, setVoiceChecking] = useState(true);
-  // Always start with TTS off so the TTS effect doesn't auto-fire before the user
-  // has given a browser audio gesture. Begin button is the intentional unlock point.
-  const [ttsOn, setTtsOn] = useState(false);
+  // The definitive in-flight/resolved availability check. Topic selection can
+  // happen before the mount-time isSpeechAvailable() check settles, so callers
+  // await this promise instead of reading the (possibly still-stale) state above.
+  const voiceCheckRef = useRef<Promise<boolean>>(Promise.resolve(false));
+  // Read-aloud defaults to on for first-time visitors; a returning storyteller's
+  // explicit choice (from the chip below) is remembered across sessions. Playback
+  // itself still only starts after the topic-pick click, which supplies the
+  // browser's required audio gesture — this only decides the initial preference.
+  const [ttsOn, setTtsOn] = useState(readTtsPreference);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -325,7 +338,9 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   useEffect(() => {
     mountedRef.current = true;
     let alive = true;
-    void isSpeechAvailable().then((ok) => {
+    const check = isSpeechAvailable();
+    voiceCheckRef.current = check;
+    void check.then((ok) => {
       if (!alive) return;
       setVoiceAvailable(ok);
       setVoiceChecking(false);
@@ -703,18 +718,28 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
     setPickerOpen(false);
   };
 
-  // User selects a conversation topic from the picker — reads the opening question
-  // aloud (satisfying the browser audio-gesture requirement) then starts the mic.
+  // User selects a conversation topic from the picker — this click doubles as the
+  // browser audio gesture, so if read-aloud is on we speak the opening question
+  // here before starting the mic (voice always opens the mic either way).
   const selectTopic = async (idx: number) => {
     if (!topicOptions) return;
     const t = topicOptions[idx];
     const q = t.questions[0];
     setTopicOptions(null);
+    // Set before setMessages() so the [messages, ttsOn] effect — which is already
+    // "live" if read-aloud defaults to on — sees idx(0) > lastSpokeRef and skips,
+    // leaving the explicit speak() below as the only one that runs.
+    lastSpokeRef.current = 0;
     setMessages([{ who: 'ai', text: q }]);
-    if (!voiceAvailable) return;
-    setTtsOn(true);
-    ttsOnRef.current = true;
-    lastSpokeRef.current = 0; // prevent TTS effect from re-speaking this message
+    // Wait for the definitive check rather than the (possibly still-pending) state —
+    // otherwise a click that beats isSpeechAvailable() to resolve reads a stale
+    // `false` and silently skips both TTS and the mic for the whole session.
+    const available = await voiceCheckRef.current;
+    if (!mountedRef.current || !available) return;
+    if (!ttsOnRef.current) {
+      void startListening();
+      return;
+    }
     setAiSpeaking(true);
     await speak(q, persona.voice);
     if (!mountedRef.current) return;
@@ -726,11 +751,14 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   const selectCustomTopic = async () => {
     const q = "What would you like to talk about today? It can be anything — a person, a place, a time in your life, or a feeling.";
     setTopicOptions(null);
-    setMessages([{ who: 'ai', text: q }]);
-    if (!voiceAvailable) return;
-    setTtsOn(true);
-    ttsOnRef.current = true;
     lastSpokeRef.current = 0;
+    setMessages([{ who: 'ai', text: q }]);
+    const available = await voiceCheckRef.current;
+    if (!mountedRef.current || !available) return;
+    if (!ttsOnRef.current) {
+      void startListening();
+      return;
+    }
     setAiSpeaking(true);
     await speak(q, persona.voice);
     if (!mountedRef.current) return;

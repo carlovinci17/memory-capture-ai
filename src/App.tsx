@@ -53,8 +53,13 @@ function AppLayout() {
     window.location.href = '/onboarding?access=1';
   };
   const clearDemoData = async () => {
-    localStorage.removeItem('mcap_demo_sessions_v1');
     await resetAll();
+    // Wipe every app setting alongside the profiles/memories, not just the demo
+    // session counter, so this is a genuine "first-time visitor" reset. Every
+    // key this app writes is namespaced with `mcap_`.
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith('mcap_'))
+      .forEach((key) => localStorage.removeItem(key));
     window.location.reload();
   };
 

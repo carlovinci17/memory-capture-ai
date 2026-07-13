@@ -18,6 +18,12 @@ beforeEach(() => {
       activeId: 'p1',
     }),
   );
+  // Other app settings a returning visitor may have changed — these should not
+  // survive a "Reset / Clear my data", or it isn't really a fresh-start reset.
+  localStorage.setItem('mcap_sidebar_collapsed', '1');
+  localStorage.setItem('mcap_a11y_textsize', '1');
+  localStorage.setItem('mcap_a11y_contrast', '1');
+  localStorage.setItem('mcap_tts', '0');
   vi.spyOn(window, 'confirm').mockReturnValue(true);
 });
 afterEach(() => vi.restoreAllMocks());
@@ -38,7 +44,24 @@ describe('Reset demo data', () => {
 
     // Lands back on the onboarding choice screen.
     await waitFor(() => expect(screen.getByRole('button', { name: /try for free/i })).toBeInTheDocument());
-    const raw = JSON.parse(localStorage.getItem('mcap_mvp_store_v1') || '{}');
-    expect(raw.profiles).toHaveLength(0);
+    // The store key itself is wiped, not just emptied, as part of the full reset.
+    expect(localStorage.getItem('mcap_mvp_store_v1')).toBeNull();
+  });
+
+  it('wipes every app setting, not just the profiles, so it is a genuine first-visit reset', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={['/home']}>
+        <StoreProvider>
+          <App />
+        </StoreProvider>
+      </MemoryRouter>,
+    );
+    await waitFor(() => screen.getByRole('button', { name: /clear my data/i }));
+    await user.click(screen.getByRole('button', { name: /clear my data/i }));
+
+    await waitFor(() => expect(screen.getByRole('button', { name: /try for free/i })).toBeInTheDocument());
+    const remainingMcapKeys = Object.keys(localStorage).filter((key) => key.startsWith('mcap_'));
+    expect(remainingMcapKeys).toEqual([]);
   });
 });
