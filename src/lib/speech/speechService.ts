@@ -94,11 +94,27 @@ export interface RecognitionHandlers {
 export async function startRecognition(handlers: RecognitionHandlers): Promise<Recognition | null> {
   const t = await getToken();
   if (!t) return null;
+
+  // Request the mic directly (the standard browser API) before paying for the
+  // SDK import/config setup, and hand the SDK our already-open stream instead
+  // of it silently acquiring its own via fromDefaultMicrophoneInput().
+  let stream: MediaStream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (err) {
+    // eslint-disable-next-line no-console -- mic failures otherwise leave no trace at all
+    console.warn('[speech] getUserMedia failed:', err);
+    handlers.onError?.(String(err));
+    return null;
+  }
+
+  const releaseStream = () => stream.getTracks().forEach((track) => track.stop());
+
   try {
     const SDK = await import('microsoft-cognitiveservices-speech-sdk');
     const speechConfig = SDK.SpeechConfig.fromAuthorizationToken(t.token, t.region);
     speechConfig.speechRecognitionLanguage = 'en-US';
-    const audioConfig = SDK.AudioConfig.fromDefaultMicrophoneInput();
+    const audioConfig = SDK.AudioConfig.fromStreamInput(stream);
     const recognizer = new SDK.SpeechRecognizer(speechConfig, audioConfig);
 
     recognizer.recognizing = (_s, e) => handlers.onInterim(e.result.text);
@@ -119,14 +135,15 @@ export async function startRecognition(handlers: RecognitionHandlers): Promise<R
     return {
       stop() {
         recognizer.stopContinuousRecognitionAsync(
-          () => recognizer.close(),
-          () => recognizer.close(),
+          () => { recognizer.close(); releaseStream(); },
+          () => { recognizer.close(); releaseStream(); },
         );
       },
     };
   } catch (err) {
     // eslint-disable-next-line no-console
     console.warn('[speech] startRecognition failed:', err);
+    releaseStream();
     handlers.onError?.(String(err));
     return null;
   }
