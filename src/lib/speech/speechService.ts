@@ -37,6 +37,44 @@ export async function isSpeechAvailable(): Promise<boolean> {
   return (await getToken()) !== null;
 }
 
+export type MicPermissionState = 'granted' | 'denied' | 'prompt' | 'unsupported';
+
+/**
+ * Read the current microphone permission without ever triggering the browser's
+ * prompt (Permissions API is query-only). Once a browser reports 'denied', no
+ * website can re-trigger that prompt — only the user's own site settings can;
+ * this lets the UI say so immediately instead of waiting for a failed attempt.
+ */
+export async function getMicPermissionState(): Promise<MicPermissionState> {
+  try {
+    if (!navigator.permissions?.query) return 'unsupported';
+    const status = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+    return status.state as MicPermissionState;
+  } catch {
+    return 'unsupported';
+  }
+}
+
+/**
+ * Live-updates when the storyteller changes the mic permission in their browser's
+ * site settings while this tab stays open (e.g. switching Block → Allow), so the
+ * app can recover without requiring a reload. Returns an unsubscribe function;
+ * a no-op if the Permissions API isn't available (e.g. some Safari versions).
+ */
+export async function watchMicPermission(
+  onChange: (state: MicPermissionState) => void,
+): Promise<() => void> {
+  try {
+    if (!navigator.permissions?.query) return () => {};
+    const status = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+    const handler = () => onChange(status.state as MicPermissionState);
+    status.addEventListener('change', handler);
+    return () => status.removeEventListener('change', handler);
+  } catch {
+    return () => {};
+  }
+}
+
 export interface Recognition {
   stop(): void;
 }

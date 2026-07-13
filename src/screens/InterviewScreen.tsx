@@ -14,10 +14,13 @@ import { getInterviewEngine } from '../lib/ai';
 import { illustrateMemory } from '../lib/ai/illustrateMemory';
 import {
   getAnalyser,
+  getMicPermissionState,
   isSpeechAvailable,
   speak,
   startRecognition,
   stopSpeaking,
+  watchMicPermission,
+  type MicPermissionState,
   type Recognition,
 } from '../lib/speech/speechService';
 import type {
@@ -282,6 +285,9 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   // otherwise degrade silently (by design), which makes them undiagnosable from
   // the field. Cleared as soon as listening starts again cleanly.
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  // Detected up front (and live-watched) so a browser-level mic block surfaces
+  // immediately, instead of only after a failed recognition attempt.
+  const [micPermission, setMicPermission] = useState<MicPermissionState>('unsupported');
   // The definitive in-flight/resolved availability check. Topic selection can
   // happen before the mount-time isSpeechAvailable() check settles, so callers
   // await this promise instead of reading the (possibly still-stale) state above.
@@ -300,6 +306,7 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   const lastSpokeRef = useRef(-1);
   const mountedRef = useRef(true);
   const listeningRef = useRef(false);
+  const micPermissionRef = useRef<MicPermissionState>('unsupported');
   const modeRef = useRef<Mode>('ai');
   // Topic pacing: count questions on the current topic; pivot at a random threshold.
   const topicTurnsRef = useRef(0);
@@ -334,6 +341,9 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
     listeningRef.current = listening;
   }, [listening]);
   useEffect(() => {
+    micPermissionRef.current = micPermission;
+  }, [micPermission]);
+  useEffect(() => {
     modeRef.current = mode;
   }, [mode]);
 
@@ -342,6 +352,7 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
   useEffect(() => {
     mountedRef.current = true;
     let alive = true;
+    let unwatch: (() => void) | undefined;
     const check = isSpeechAvailable();
     voiceCheckRef.current = check;
     void check.then((ok) => {
@@ -349,9 +360,25 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
       setVoiceAvailable(ok);
       setVoiceChecking(false);
     });
+    void getMicPermissionState().then((state) => {
+      if (!alive) return;
+      setMicPermission(state);
+      // Surface a blocked mic immediately, without waiting for a failed attempt.
+      if (state === 'denied') setVoiceError('NotAllowedError: Permission denied');
+    });
+    void watchMicPermission((state) => {
+      if (!alive) return;
+      setMicPermission(state);
+      if (state === 'denied') setVoiceError('NotAllowedError: Permission denied');
+      else if (state === 'granted') setVoiceError(null);
+    }).then((unsub) => {
+      if (!alive) unsub();
+      else unwatch = unsub;
+    });
     return () => {
       alive = false;
       mountedRef.current = false;
+      unwatch?.();
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
       recognitionRef.current?.stop();
       recognitionRef.current = null;
@@ -442,6 +469,12 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
 
   const startListening = async () => {
     if (listeningRef.current || pausedRef.current) return;
+    // Already known blocked (from the proactive check or a prior failed attempt) —
+    // no browser will re-show the prompt for us, so don't waste a real attempt.
+    if (micPermissionRef.current === 'denied') {
+      setVoiceError('NotAllowedError: Permission denied');
+      return;
+    }
     baseTextRef.current = text;
     setVoiceError(null);
     const rec = await startRecognition({
@@ -462,7 +495,13 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
         }, 2500);
       },
       onError: (detail) => {
-        if (mountedRef.current) setVoiceError(detail);
+        if (mountedRef.current) {
+          setVoiceError(detail);
+          // The Permissions API is unavailable in some browsers (e.g. Safari) — a
+          // NotAllowedError from an actual attempt is just as definitive as a
+          // 'denied' query result, so record it the same way either way.
+          if (/NotAllowedError/i.test(detail)) setMicPermission('denied');
+        }
         stopListening();
       },
     });
@@ -1142,7 +1181,9 @@ export function InterviewScreen({ profile }: { profile: StorytellerProfile }) {
             : !voiceAvailable
               ? '🔇 Voice is unavailable here — you can type your answers. (Voice needs the running API: open the app on the SWA port, e.g. http://localhost:4281, not the Vite port.)'
               : voiceError
-                ? `🎙️ Microphone stopped: ${voiceError} — check your browser's microphone permission for this site, then press the mic button to try again.`
+                ? /NotAllowedError|Permission denied/i.test(voiceError)
+                  ? "🎙️ Microphone access is blocked for this site. Click the padlock/site-info icon in your browser's address bar, set Microphone to Allow (or reset permissions), then reload the page — pressing the mic button again won't help until that's changed."
+                  : `🎙️ Microphone stopped: ${voiceError} — press the mic button to try again.`
                 : mode === 'manual'
               ? askingNow
                 ? `Manual mode: type each question you ask so it's recorded, then capture ${first}'s answer. Suggested questions (right) are optional.`

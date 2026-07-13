@@ -9,7 +9,13 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import App from '../App';
 import { StoreProvider } from '../lib/store/StoreProvider';
-import { isSpeechAvailable, speak, startRecognition } from '../lib/speech/speechService';
+import {
+  getMicPermissionState,
+  isSpeechAvailable,
+  speak,
+  startRecognition,
+  watchMicPermission,
+} from '../lib/speech/speechService';
 
 vi.mock('../lib/speech/speechService', () => ({
   isSpeechAvailable: vi.fn(),
@@ -17,6 +23,8 @@ vi.mock('../lib/speech/speechService', () => ({
   stopSpeaking: vi.fn(),
   startRecognition: vi.fn().mockResolvedValue({ stop: vi.fn() }),
   getAnalyser: vi.fn().mockReturnValue(null),
+  getMicPermissionState: vi.fn().mockResolvedValue('granted'),
+  watchMicPermission: vi.fn().mockResolvedValue(() => {}),
 }));
 
 function renderApp() {
@@ -119,5 +127,42 @@ describe('Interview voice startup race', () => {
 
     await waitFor(() => expect(startRecognition).toHaveBeenCalledTimes(1));
     expect(speak).not.toHaveBeenCalled();
+  });
+
+  it('shows blocked-mic guidance immediately when permission is already denied, without a wasted attempt', async () => {
+    vi.mocked(isSpeechAvailable).mockResolvedValue(true);
+    vi.mocked(getMicPermissionState).mockResolvedValue('denied');
+
+    const user = userEvent.setup();
+    renderApp();
+    await createProfile(user);
+    await user.click(screen.getByRole('button', { name: /start your first interview/i }));
+
+    await screen.findByText(/microphone access is blocked/i);
+    expect(startRecognition).not.toHaveBeenCalled();
+  });
+
+  it('clears the blocked-mic guidance live when permission changes to granted, no reload needed', async () => {
+    let capturedOnChange: ((state: string) => void) | undefined;
+    vi.mocked(isSpeechAvailable).mockResolvedValue(true);
+    vi.mocked(getMicPermissionState).mockResolvedValue('denied');
+    vi.mocked(watchMicPermission).mockImplementation(async (onChange) => {
+      capturedOnChange = onChange as (state: string) => void;
+      return () => {};
+    });
+
+    const user = userEvent.setup();
+    renderApp();
+    await createProfile(user);
+    await user.click(screen.getByRole('button', { name: /start your first interview/i }));
+
+    await screen.findByText(/microphone access is blocked/i);
+    expect(capturedOnChange).toBeTypeOf('function');
+
+    capturedOnChange?.('granted');
+
+    await waitFor(() =>
+      expect(screen.queryByText(/microphone access is blocked/i)).not.toBeInTheDocument(),
+    );
   });
 });
