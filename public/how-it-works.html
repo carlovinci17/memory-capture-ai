@@ -1077,8 +1077,13 @@ class Component extends DCLogic {
     if (!af) return null;
     const flow = this.FLOWS.find(f => f.id === af);
     const rects = this.state.rects || {};
-    const pts = flow.nodes.map(id => rects[id]).filter(Boolean).map(r => ({ x:r.cx, y:r.cy, w:r.w }));
-    if (pts.length < 2) return null;
+    const centers = flow.nodes.map(id => rects[id]).filter(Boolean).map(r => ({ x:r.cx, y:r.cy, w:r.w }));
+    if (centers.length < 2) return null;
+    // Route the connecting line through the same spot as the numbered badges
+    // (just left of each card's center) so the line passes through every
+    // circle again, instead of through the raw card centers the badges no
+    // longer sit on.
+    const pts = centers.map(c => ({ x: c.x - (c.w || 0)/2 - 6, y: c.y }));
     const d = this.smooth(pts);
     const animate = this.props.animateFlow !== false;
     const showLbl = this.props.showStepLabels !== false;
@@ -1092,9 +1097,8 @@ class Component extends DCLogic {
       // Badge sits just outside the card's left edge (not dead-center) so the
       // number never covers the card's own title/subtitle text.
       pts.forEach((p,i) => {
-        const bx = p.x - (p.w || 0)/2 - 16;
-        kids.push(h('circle', { key:'c'+i, cx:bx, cy:p.y, r:13, fill:'oklch(0.99 0.008 80)', stroke:flow.color, strokeWidth:2 }));
-        kids.push(h('text', { key:'t'+i, x:bx, y:p.y, textAnchor:'middle', dominantBaseline:'central',
+        kids.push(h('circle', { key:'c'+i, cx:p.x, cy:p.y, r:13, fill:'oklch(0.99 0.008 80)', stroke:flow.color, strokeWidth:2 }));
+        kids.push(h('text', { key:'t'+i, x:p.x, y:p.y, textAnchor:'middle', dominantBaseline:'central',
           style:{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', fontWeight:600, fill:flow.color } }, String(i+1)));
       });
     }
