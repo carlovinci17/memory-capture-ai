@@ -968,32 +968,32 @@ class Component extends DCLogic {
       color:'oklch(0.5 0.1 150)', soft:'oklch(0.5 0.1 150 / 0.32)', glow:'oklch(0.5 0.1 150 / 0.4)',
       sub:'New — every Google sign-in is gated behind admin approval before the storyteller can use the app.',
       nodes:['GATE','GOOGLE','EDGE_AUTH','FN_CHECK_APPROVAL','COL_USERS','ACS_ADMIN','ACS_USER'],
-      steps:['Storyteller chooses "Sign in with Google" at the gate','Google OAuth completes via the built-in SWA auth','First authenticated /api/* call triggers checkApproval()','A UserDoc is created in Cosmos with status: pending (the admin\'s own email auto-approves)','Two ACS emails fire concurrently: admin notification + user pending confirmation'] },
+      steps:['Storyteller chooses "Sign in with Google" at the gate','Google\'s OAuth screen completes the sign-in','The built-in SWA auth (Google-only) issues the session','First authenticated /api/* call triggers checkApproval()','A UserDoc is created in Cosmos with status: pending (the admin\'s own email auto-approves)','An admin notification email fires with one-click Approve/Reject buttons','A pending confirmation email is sent to the new user'] },
     { id:2, glyph:'②', short:'Approval', title:'Approval (email-only)',
       color:'oklch(0.58 0.13 95)', soft:'oklch(0.58 0.13 95 / 0.32)', glow:'oklch(0.58 0.13 95 / 0.4)',
       sub:'There\'s no in-app admin screen — the whole review happens by email.',
       nodes:['ACS_ADMIN','FN_USERS_REVIEW','COL_USERS','ACS_OUTCOME','FN_USERS_REAPPLY','FN_USERS_CANCEL'],
-      steps:['Admin receives the notification email with one-click Approve/Reject buttons (single-use HMAC-signed links)','Clicking a button calls GET /api/users/review, which validates the token','The user\'s status is set to approved or denied in the users container','An outcome email is sent to the user with the result','A denied user can "reapply" to reset to pending; a pending user can self-cancel'] },
+      steps:['Admin receives the notification email with one-click Approve/Reject buttons (single-use HMAC-signed links)','Clicking a button calls GET /api/users/review, which validates the token','The user\'s status is set to approved or denied in the users container','An outcome email is sent to the user with the result','A denied user can "reapply" to reset their status back to pending','A pending user can self-cancel their request at any time'] },
     { id:3, glyph:'③', short:'Memory capture', title:'Interview → Memory Capture',
       color:'oklch(0.56 0.16 38)', soft:'oklch(0.56 0.16 38 / 0.32)', glow:'oklch(0.56 0.16 38 / 0.4)',
       sub:'A spoken answer becomes a verbatim, illustrated memory card.',
       nodes:['HUMAN','PERSONAS','STT','FN_EXTRACT','OAI_EXTRACT','S3','FN_ILLUSTRATE','OAI_IMAGE','BLOB_ART'],
-      steps:['Storyteller picks a persona and answers — by voice or text','STT transcribes the spoken answer, kept verbatim','extract.ts calls gpt-4o-mini to structure it; server guards the excerpt is a real substring of the answer','A Memory card appears instantly with a procedural watercolor placeholder','illustrate.ts asynchronously requests a gpt-image-1 painting','The generated image lands in memory-art/ and swaps into the card'] },
+      steps:['Storyteller answers — by voice or text','The active persona shapes the tone of the question just answered','STT transcribes the spoken answer, kept verbatim','extract.ts calls gpt-4o-mini to structure the answer','The server guards that the extracted excerpt is a real substring of the answer','A Memory card appears instantly in the Interview view with a procedural watercolor placeholder','illustrate.ts asynchronously requests a watercolor painting','gpt-image-1 generates a 1024×1024 illustration from the title, theme and era','The generated image lands in memory-art/ and swaps into the card'] },
     { id:4, glyph:'④', short:'AI questions', title:'AI Question Flow',
       color:'oklch(0.5 0.13 265)', soft:'oklch(0.5 0.13 265 / 0.32)', glow:'oklch(0.5 0.13 265 / 0.4)',
       sub:'The persona asks the next question and speaks it aloud.',
       nodes:['FN_NEXT_Q','OAI_NEXT_Q','S3','TTS','HUMAN','STT'],
-      steps:['Extraction complete','next-question.ts calls gpt-4o-mini, streamed, persona-toned','Question rendered on screen','TTS speaks it in the persona\'s voice','Mic auto-restarts for the reply'] },
+      steps:['next-question.ts calls gpt-4o-mini to draft the next question','The question streams back token by token, persona-toned','The question renders on screen in the Interview view','TTS speaks it aloud in the persona\'s voice','The storyteller replies, by voice or typing','Mic auto-restarts so STT can capture the reply'] },
     { id:5, glyph:'⑤', short:'Persistence', title:'Profile Persistence (dual mode)',
       color:'oklch(0.5 0.1 165)', soft:'oklch(0.5 0.1 165 / 0.32)', glow:'oklch(0.5 0.1 165 / 0.4)',
       sub:'The same screens save locally in guest mode or to the cloud in production — no code change.',
       nodes:['STORE','LOCAL_REPO','API_REPO','FN_PROFILES','COL_PROFILES'],
-      steps:['Screen calls ProfileRepository.save()','Guest mode uses LocalProfileRepository, writing to browser localStorage','Production mode uses ApiProfileRepository, calling /api/profiles','Persisted to the Cosmos profiles container'] },
+      steps:['Screen calls ProfileRepository.save()','Guest mode uses LocalProfileRepository, writing to browser localStorage','Production mode uses ApiProfileRepository, calling /api/profiles','profiles.ts handles the GET/POST request','Persisted to the Cosmos profiles container'] },
     { id:6, glyph:'⑥', short:'Persona switch', title:'Persona Switching',
       color:'oklch(0.58 0.15 20)', soft:'oklch(0.58 0.15 20 / 0.32)', glow:'oklch(0.58 0.15 20 / 0.4)',
       sub:'Changing persona re-tones the whole interview — prompt, voice and offline fallback all switch together.',
       nodes:['PERSONAS','STORE','FN_NEXT_Q','OAI_NEXT_Q','OFFLINE_ENG','TTS'],
-      steps:['Storyteller picks a different persona: historian, journalist, grandchild, or researcher','Active persona is saved on the profile via ProfileRepository','next-question.ts swaps in that persona\'s system prompt before calling gpt-4o-mini','Offline Engine swaps to that persona\'s regex/prompt pool if running without Azure','TTS switches to the matching neural voice for all following questions'] },
+      steps:['Storyteller picks a different persona: historian, journalist, grandchild, or researcher','Active persona is saved on the profile via ProfileRepository','next-question.ts swaps in that persona\'s system prompt','gpt-4o-mini is called with the new persona-toned prompt','Offline Engine swaps to that persona\'s regex/prompt pool if running without Azure','TTS switches to the matching neural voice for all following questions'] },
   ];
 
   state = { activeFlow:null, selectedNode:null, rects:{}, mapW:0, mapH:0 };
@@ -1077,7 +1077,7 @@ class Component extends DCLogic {
     if (!af) return null;
     const flow = this.FLOWS.find(f => f.id === af);
     const rects = this.state.rects || {};
-    const pts = flow.nodes.map(id => rects[id]).filter(Boolean).map(r => ({ x:r.cx, y:r.cy }));
+    const pts = flow.nodes.map(id => rects[id]).filter(Boolean).map(r => ({ x:r.cx, y:r.cy, w:r.w }));
     if (pts.length < 2) return null;
     const d = this.smooth(pts);
     const animate = this.props.animateFlow !== false;
@@ -1089,9 +1089,12 @@ class Component extends DCLogic {
       h('path', { key:'dash', d, fill:'none', stroke:flow.color, strokeWidth:2.6, strokeLinecap:'round', strokeDasharray:'0.1 12', style:{ animation: animate ? 'archdash 4.5s linear infinite' : 'none' } }),
     ];
     if (showLbl){
+      // Badge sits just outside the card's left edge (not dead-center) so the
+      // number never covers the card's own title/subtitle text.
       pts.forEach((p,i) => {
-        kids.push(h('circle', { key:'c'+i, cx:p.x, cy:p.y, r:13, fill:'oklch(0.99 0.008 80)', stroke:flow.color, strokeWidth:2 }));
-        kids.push(h('text', { key:'t'+i, x:p.x, y:p.y, textAnchor:'middle', dominantBaseline:'central',
+        const bx = p.x - (p.w || 0)/2 - 16;
+        kids.push(h('circle', { key:'c'+i, cx:bx, cy:p.y, r:13, fill:'oklch(0.99 0.008 80)', stroke:flow.color, strokeWidth:2 }));
+        kids.push(h('text', { key:'t'+i, x:bx, y:p.y, textAnchor:'middle', dominantBaseline:'central',
           style:{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', fontWeight:600, fill:flow.color } }, String(i+1)));
       });
     }
