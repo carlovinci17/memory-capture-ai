@@ -141,7 +141,7 @@ flowchart TB
   subgraph AI["🤖 Azure AI Services"]
     direction TB
 
-    subgraph OPENAI_CHAT["Azure OpenAI — gpt-4o-mini\ncarlovinci17-7226-resource"]
+    subgraph OPENAI_CHAT["Azure OpenAI — gpt-4o-mini\nmemory-capture-chat"]
       OAI_EXTRACT["Memory Extraction\nStructured JSON output\ntitle · era · theme · people · places · years"]
       OAI_NEXT_Q["Question Generation\nContext-aware follow-up\nstreamed token by token"]
       OAI_SUGGEST["Question Suggestions\n3 alternatives for manual mode"]
