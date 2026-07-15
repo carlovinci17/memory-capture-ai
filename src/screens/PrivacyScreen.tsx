@@ -137,8 +137,8 @@ export function PrivacyScreen() {
               </div>
               <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6, margin: 0 }}>
                 Stories and photos are stored in <strong>Azure Cosmos DB and Blob
-                Storage</strong> (Microsoft cloud). This mode is password-protected and
-                only used by the app owner for their own personal stories.
+                Storage</strong> (Microsoft cloud). Getting here requires signing in
+                with Google and admin approval — it isn't open sign-up.
               </p>
             </div>
           </div>
@@ -190,17 +190,20 @@ export function PrivacyScreen() {
         {/* Section 3 — Security */}
         <Section eyebrow="Security" title="Built with care" delay=".1s">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Fact label="No accounts or tracking">
-              There are no user accounts, cookies, analytics scripts, or third-party
-              trackers of any kind in this app.
+            <Fact label="No cookies or ad tracking">
+              Full access uses Google sign-in, so your Google email is kept to gate
+              approval and let you sign back in — that's the only account data this
+              app holds. Beyond that, there are no cookies, analytics scripts, or
+              third-party trackers of any kind.
             </Fact>
             <Fact label="Not indexed by search engines">
               This app is blocked from Google, Bing, and all other search engines via
               robots.txt and meta tags. It is shared directly, not discoverable publicly.
             </Fact>
-            <Fact label="Production access">
-              The production mode (Azure cloud storage) is locked behind a password
-              known only to the app owner. Visitors always operate in demo mode.
+            <Fact label="Full access is invite-only">
+              Signing in with Google doesn't grant cloud access by itself — an admin
+              must approve the request first. Anyone not yet approved (or not signed
+              in) uses demo mode, which needs no account at all.
             </Fact>
             <Fact label="Data in transit and at rest">
               All communication with Azure services uses HTTPS. Data stored in Azure

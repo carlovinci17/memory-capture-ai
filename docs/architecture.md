@@ -222,7 +222,7 @@ flowchart TB
 | Hosting | Azure Static Web Apps | CDN hosting + managed Functions + built-in auth |
 | Auth | Google OAuth (via SWA) | Sign-in for production mode; gated by an admin approval workflow |
 | CI/CD | GitHub Actions | Lint → typecheck → test → build → deploy |
-| Functions | Azure Functions v4 TypeScript | 13 API endpoints (profiles, AI, media, speech, sign-up approval) |
+| Functions | Azure Functions v4 TypeScript | 12 API endpoints (profiles, AI, media, speech, sign-up approval) |
 | Database | Azure Cosmos DB | `profiles` (memories, NoSQL, partitioned by account) + `users` (approval status) |
 | Storage | Azure Blob Storage | Profile photos + AI-generated illustrations |
 | Email | Azure Communication Services | Sign-up approval emails (admin notify, pending, approved/rejected) |
