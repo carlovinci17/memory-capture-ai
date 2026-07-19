@@ -190,11 +190,11 @@ export function PrivacyScreen() {
         {/* Section 3 — Security */}
         <Section eyebrow="Security" title="Built with care" delay=".1s">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Fact label="No cookies or ad tracking">
+            <Fact label="Accounts & analytics">
               Full access uses Google sign-in, so your Google email is kept to gate
               approval and let you sign back in — that's the only account data this
-              app holds. Beyond that, there are no cookies, analytics scripts, or
-              third-party trackers of any kind.
+              app holds directly. This app also uses Google Tag Manager to load
+              analytics tags, which may set cookies to measure how the app is used.
             </Fact>
             <Fact label="Not indexed by search engines">
               This app is blocked from Google, Bing, and all other search engines via
