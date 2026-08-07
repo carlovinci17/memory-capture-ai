@@ -13,79 +13,103 @@ const ITEMS: { to: string; label: string; icon: IconName }[] = [
 interface SidebarProps {
   collapsed?: boolean;
   onToggle?: () => void;
+  mobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
-export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export function Sidebar({ collapsed, onToggle, mobileOpen, onCloseMobile }: SidebarProps) {
   return (
-    <aside className="sidebar">
-      <div className="brand">
-        <div className="brand__mark">
-          <Icon name="quote" size={20} />
-        </div>
-        <div className="brand__name">Memory Capture AI</div>
-      </div>
-
-      <nav className="nav" aria-label="Primary">
-        <div className="nav__label">Your Journal</div>
-        {ITEMS.map((it) => (
-          <NavLink
-            key={it.to}
-            to={it.to}
-            className={({ isActive }) => 'nav__item' + (isActive ? ' is-active' : '')}
+    <>
+      {mobileOpen && (
+        <button
+          type="button"
+          className="sidebar-backdrop"
+          aria-label="Close menu"
+          onClick={onCloseMobile}
+        />
+      )}
+      <aside className={'sidebar' + (mobileOpen ? ' sidebar--mobile-open' : '')}>
+        {onCloseMobile && (
+          <button
+            className="sidebar__close-btn"
+            onClick={onCloseMobile}
+            aria-label="Close menu"
+            title="Close menu"
           >
-            <Icon name={it.icon} className="nav__icon" />
-            <span>{it.label}</span>
-          </NavLink>
-        ))}
-      </nav>
+            <Icon name="close" size={18} />
+          </button>
+        )}
+        <div className="brand">
+          <div className="brand__mark">
+            <Icon name="quote" size={20} />
+          </div>
+          <div className="brand__name">Memory Capture AI</div>
+        </div>
 
-      <div className="sidebar__spacer" />
-      {onToggle && (
-        <button
-          className="nav__item sidebar__collapse-btn"
-          onClick={onToggle}
-          aria-label={collapsed ? 'Show sidebar' : 'Hide sidebar'}
-          title={collapsed ? 'Show sidebar' : 'Hide sidebar'}
+        <nav className="nav" aria-label="Primary">
+          <div className="nav__label">Your Journal</div>
+          {ITEMS.map((it) => (
+            <NavLink
+              key={it.to}
+              to={it.to}
+              className={({ isActive }) => 'nav__item' + (isActive ? ' is-active' : '')}
+              onClick={onCloseMobile}
+            >
+              <Icon name={it.icon} className="nav__icon" />
+              <span>{it.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="sidebar__spacer" />
+        {onToggle && (
+          <button
+            className="nav__item sidebar__collapse-btn"
+            onClick={onToggle}
+            aria-label={collapsed ? 'Show sidebar' : 'Hide sidebar'}
+            title={collapsed ? 'Show sidebar' : 'Hide sidebar'}
+            style={{ margin: '0 8px 4px' }}
+          >
+            <Icon name="chev" size={16} className="nav__icon" style={{ transform: 'rotate(90deg)' }} />
+            <span>Hide sidebar</span>
+          </button>
+        )}
+        <A11yMenu />
+        <NavLink
+          to="/privacy"
+          className={({ isActive }) => 'nav__item' + (isActive ? ' is-active' : '')}
           style={{ margin: '0 8px 4px' }}
+          onClick={onCloseMobile}
         >
-          <Icon name="chev" size={16} className="nav__icon" style={{ transform: 'rotate(90deg)' }} />
-          <span>Hide sidebar</span>
-        </button>
-      )}
-      <A11yMenu />
-      <NavLink
-        to="/privacy"
-        className={({ isActive }) => 'nav__item' + (isActive ? ' is-active' : '')}
-        style={{ margin: '0 8px 4px' }}
-      >
-        <Icon name="info" className="nav__icon" />
-        <span>Privacy & AI</span>
-      </NavLink>
-      {getRuntimeMode() === 'production' && (
-        <button
-          className="nav__item"
-          onClick={() => {
-            setRuntimeMode('demo');
-            window.location.href = '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/onboarding?access=1');
-          }}
-          style={{ margin: '0 8px 8px' }}
-        >
-          <Icon name="logout" className="nav__icon" />
-          <span>Sign out</span>
-        </button>
-      )}
-      <footer className="sidebar__footer">
-        <p>
-          <a href="/how-it-works" target="_blank" rel="noopener noreferrer">How it works</a>
-        </p>
-        <p>
-          By{' '}
-          <a href="https://carlovinci.com.au" target="_blank" rel="noopener noreferrer">
-            Carlo Vinci
-          </a>
-        </p>
-        <p>© 2026 Memory Capture AI</p>
-      </footer>
-    </aside>
+          <Icon name="info" className="nav__icon" />
+          <span>Privacy & AI</span>
+        </NavLink>
+        {getRuntimeMode() === 'production' && (
+          <button
+            className="nav__item"
+            onClick={() => {
+              setRuntimeMode('demo');
+              window.location.href = '/.auth/logout?post_logout_redirect_uri=' + encodeURIComponent('/onboarding?access=1');
+            }}
+            style={{ margin: '0 8px 8px' }}
+          >
+            <Icon name="logout" className="nav__icon" />
+            <span>Sign out</span>
+          </button>
+        )}
+        <footer className="sidebar__footer">
+          <p>
+            <a href="/how-it-works" target="_blank" rel="noopener noreferrer">How it works</a>
+          </p>
+          <p>
+            By{' '}
+            <a href="https://carlovinci.com.au" target="_blank" rel="noopener noreferrer">
+              Carlo Vinci
+            </a>
+          </p>
+          <p>© 2026 Memory Capture AI</p>
+        </footer>
+      </aside>
+    </>
   );
 }

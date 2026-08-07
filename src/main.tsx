@@ -12,6 +12,7 @@ import './styles/app.css';
 import './styles/screens.css';
 import './styles/screens2.css';
 import './styles/mvp.css';
+import './styles/mobile.css';
 // Accessibility layer — loads last so its opt-in modes win.
 import './styles/a11y.css';
 

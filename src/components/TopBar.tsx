@@ -11,9 +11,10 @@ interface TopBarProps {
   eyebrow: string;
   title: string;
   profile: StorytellerProfile;
+  onMenuClick?: () => void;
 }
 
-export function TopBar({ eyebrow, title, profile }: TopBarProps) {
+export function TopBar({ eyebrow, title, profile, onMenuClick }: TopBarProps) {
   const { profiles, switchProfile } = useStore();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -54,6 +55,17 @@ export function TopBar({ eyebrow, title, profile }: TopBarProps) {
   return (
     <>
       <div className="topbar">
+        {onMenuClick && (
+          <button
+            type="button"
+            className="topbar__menu-btn"
+            onClick={onMenuClick}
+            aria-label="Open menu"
+            title="Open menu"
+          >
+            <Icon name="menu" size={20} />
+          </button>
+        )}
         <div>
           <div className="topbar__eyebrow">{eyebrow}</div>
           <div className="topbar__title">{title}</div>
