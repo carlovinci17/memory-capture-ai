@@ -76,6 +76,8 @@
     opacity: 1;
     pointer-events: auto;
     transition: transform 0.25s ease;
+    background: linear-gradient(180deg, var(--surface), var(--surface-2));
+    backdrop-filter: none;
   }
   .app--sidebar-collapsed .sidebar {
     opacity: 1;
