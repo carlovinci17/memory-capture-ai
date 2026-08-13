@@ -207,6 +207,9 @@
   .profile-facts {
     justify-content: center;
   }
+  .profile-panels {
+    grid-template-columns: 1fr;
+  }
   .profiles-grid {
     grid-template-columns: 1fr;
   }
