@@ -1,0 +1,252 @@
+/* ============================================================
+   Mobile responsive layer — off-canvas sidebar + small-viewport
+   layout adjustments. Loads after screen CSS so its rules win
+   inside each breakpoint; a11y.css still loads after this so
+   opt-in accessibility modes keep the final say.
+   ============================================================ */
+
+/* ---------- hamburger menu button (topbar) ---------- */
+.topbar__menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  cursor: pointer;
+  margin-right: 2px;
+}
+.topbar__menu-btn:hover {
+  color: var(--ink);
+  border-color: var(--ink-3);
+}
+
+/* ---------- sidebar close button (mobile off-canvas only) ---------- */
+.sidebar__close-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 18px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+.sidebar__close-btn:hover {
+  color: var(--ink);
+  background: color-mix(in oklab, var(--accent) 8%, transparent);
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  /* ---------- app shell: sidebar off-canvas ---------- */
+  .app {
+    grid-template-columns: 1fr;
+  }
+  .app--sidebar-collapsed {
+    grid-template-columns: 1fr;
+  }
+  .sidebar-tab {
+    display: none;
+  }
+  .sidebar__collapse-btn {
+    display: none;
+  }
+
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 210;
+    width: min(82vw, 300px);
+    max-width: 300px;
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-lg);
+    opacity: 1;
+    pointer-events: auto;
+    transition: transform 0.25s ease;
+    background: linear-gradient(180deg, var(--surface), var(--surface-2));
+    backdrop-filter: none;
+  }
+  .app--sidebar-collapsed .sidebar {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .sidebar--mobile-open {
+    transform: translateX(0);
+  }
+  .sidebar__close-btn {
+    display: flex;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 205;
+    border: none;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.42);
+    animation: rise 0.2s ease both;
+  }
+
+  /* ---------- topbar ---------- */
+  .topbar {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+  .topbar__menu-btn {
+    display: flex;
+  }
+  .topbar__title {
+    font-size: 18px;
+  }
+  .topbar__profile-txt {
+    display: none;
+  }
+
+  .pm-menu {
+    left: 12px;
+    right: 12px;
+    top: 64px;
+    width: auto;
+  }
+
+  .demo-banner {
+    flex-wrap: wrap;
+    padding: 8px 16px;
+  }
+  .demo-banner__note {
+    display: none;
+  }
+
+  /* ---------- page padding ---------- */
+  .page {
+    padding: 20px 16px 60px;
+  }
+
+  /* ---------- home ---------- */
+  .hero {
+    padding: 28px 24px;
+  }
+  .hero__title {
+    font-size: 32px;
+  }
+  .grid-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-cards,
+  .grid-cards--4 {
+    grid-template-columns: 1fr;
+  }
+
+  /* ---------- interview ---------- */
+  .iv {
+    grid-template-columns: 1fr;
+    height: auto;
+    padding: 16px 16px 24px;
+  }
+  .iv__stage {
+    min-height: 70vh;
+  }
+  .rail {
+    overflow-y: visible;
+  }
+  .iv__topic-cards {
+    grid-template-columns: 1fr;
+  }
+  .iv__transcript {
+    padding: 8px 18px 20px;
+  }
+  .iv__dock {
+    padding: 14px 16px 18px;
+    flex-wrap: wrap;
+  }
+  .iv__compose {
+    max-width: none;
+  }
+
+  /* ---------- timeline ---------- */
+  .tl-row {
+    grid-template-columns: 44px 1fr;
+    gap: 12px;
+  }
+  .tl-card {
+    flex-direction: column;
+  }
+  .tl-card__thumb {
+    width: 100%;
+    height: 140px;
+  }
+
+  /* ---------- canvas ---------- */
+  .canvas-masonry {
+    columns: 1;
+  }
+
+  /* ---------- profile ---------- */
+  .profile-hero {
+    grid-template-columns: 1fr;
+    text-align: center;
+    padding: 26px 22px;
+  }
+  .profile-portrait {
+    margin: 0 auto;
+  }
+  .profile-facts {
+    justify-content: center;
+  }
+  .profile-panels {
+    grid-template-columns: 1fr;
+  }
+  .profiles-grid {
+    grid-template-columns: 1fr;
+  }
+  .persona-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* ---------- search ---------- */
+  .search-box {
+    padding: 14px 18px;
+  }
+  .search-box input {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 16px 12px 52px;
+  }
+  .hero__title {
+    font-size: 27px;
+  }
+  .grid-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .ob-field--row {
+    grid-template-columns: 1fr;
+  }
+  .ob__panel {
+    padding: 26px 20px 24px;
+  }
+  .sum-hero {
+    padding: 26px 20px;
+  }
+  .sum-photo-frame {
+    display: none;
+  }
+}

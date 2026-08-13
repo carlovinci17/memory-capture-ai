@@ -110,15 +110,7 @@ export function ProfileScreen({ profile }: { profile: StorytellerProfile }) {
         </div>
       </section>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 22,
-          marginTop: 24,
-          alignItems: 'start',
-        }}
-      >
+      <div className="profile-panels">
         {/* interviewer */}
         <div className="panel rise" style={{ animationDelay: '.05s' }}>
           <SectionHead eyebrow="Who interviews you" title="Your interviewer" />

@@ -35,6 +35,7 @@ function AppLayout() {
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem('mcap_sidebar_collapsed') === '1',
   );
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const toggleSidebar = () => {
     setCollapsed((v) => {
@@ -43,6 +44,21 @@ function AppLayout() {
       return next;
     });
   };
+
+  // Close the mobile off-canvas menu whenever the route changes (e.g. after a nav click).
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [location.pathname]);
+
+  // Lock body scroll behind the mobile menu overlay while it's open.
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileNavOpen]);
 
   if (!activeProfile) return <Navigate to="/onboarding" replace />;
 
@@ -74,7 +90,12 @@ function AppLayout() {
         Skip to main content
       </a>
       <WatercolorDefs />
-      <Sidebar onToggle={toggleSidebar} collapsed={collapsed} />
+      <Sidebar
+        onToggle={toggleSidebar}
+        collapsed={collapsed}
+        mobileOpen={mobileNavOpen}
+        onCloseMobile={() => setMobileNavOpen(false)}
+      />
       {collapsed && (
         <button
           className="sidebar-tab"
@@ -99,7 +120,12 @@ function AppLayout() {
             </div>
           </div>
         )}
-        <TopBar eyebrow={eyebrow} title={title} profile={activeProfile} />
+        <TopBar
+          eyebrow={eyebrow}
+          title={title}
+          profile={activeProfile}
+          onMenuClick={() => setMobileNavOpen((v) => !v)}
+        />
         <Outlet context={activeProfile} />
       </main>
     </div>
