@@ -22,6 +22,7 @@
     "dev:api": "cd api && npm start"
   },
   "dependencies": {
+    "@microsoft/applicationinsights-web": "^3.4.3",
     "microsoft-cognitiveservices-speech-sdk": "^1.41.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -31,7 +32,6 @@
   "devDependencies": {
     "@azure/static-web-apps-cli": "^2.0.2",
     "@testing-library/jest-dom": "^6.4.8",
-    "concurrently": "^9.0.1",
     "@testing-library/react": "^16.0.1",
     "@testing-library/user-event": "^14.5.2",
     "@types/react": "^18.3.5",
@@ -39,6 +39,7 @@
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "concurrently": "^9.0.1",
     "eslint": "^8.57.0",
     "eslint-plugin-jsx-a11y": "^6.9.0",
     "eslint-plugin-react-hooks": "^4.6.2",
