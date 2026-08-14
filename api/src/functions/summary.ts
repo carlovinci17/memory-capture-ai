@@ -5,15 +5,13 @@ import { z } from 'zod';
 import { getClient, getDeployment } from '../lib/client';
 import { SummaryRequest } from '../lib/schemas';
 import { summarySystem } from '../lib/prompts';
-import { badRequest, json, parseBody, timeoutSignal, tooManyRequests, upstreamError, ValidationError } from '../lib/http';
-import { allowRequest } from '../lib/rateLimit';
-import { requireSessionToken } from '../lib/sessionToken';
+import { badRequest, json, parseBody, timeoutSignal, upstreamError, ValidationError } from '../lib/http';
+import { requireSession } from '../lib/sessionToken';
 
 const ResponseShape = z.object({ paragraph: z.string().default('') });
 
 async function handler(req: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
-  if (!allowRequest(req, 40)) return tooManyRequests();
-  const gate = requireSessionToken(req);
+  const gate = requireSession(req, 40);
   if (gate !== true) return gate;
   let body;
   try {

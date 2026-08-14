@@ -4,13 +4,11 @@
 // the client refreshes before expiry. Returns 503 when Speech isn't configured
 // (the UI then hides voice and falls back to typing).
 import { app, type HttpRequest, type HttpResponseInit, type InvocationContext } from '@azure/functions';
-import { json, timeoutSignal, tooManyRequests } from '../lib/http';
-import { allowRequest } from '../lib/rateLimit';
-import { requireSessionToken } from '../lib/sessionToken';
+import { json, timeoutSignal } from '../lib/http';
+import { requireSession } from '../lib/sessionToken';
 
 async function handler(req: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
-  if (!allowRequest(req, 20)) return tooManyRequests();
-  const gate = requireSessionToken(req);
+  const gate = requireSession(req, 20);
   if (gate !== true) return gate;
   const key = process.env.AZURE_SPEECH_KEY;
   const region = process.env.AZURE_SPEECH_REGION;

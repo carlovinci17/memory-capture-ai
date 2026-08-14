@@ -11,7 +11,7 @@ vi.mock('@azure/functions', () => ({
   },
 }));
 
-vi.mock('../lib/sessionToken', () => ({ requireSessionToken: () => true }));
+vi.mock('../lib/sessionToken', () => ({ requireSession: () => true }));
 
 const ctx = { error: () => {} };
 const req = () => ({ headers: { get: () => null } });
