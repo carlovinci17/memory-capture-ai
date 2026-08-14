@@ -4495,6 +4495,11 @@
             sub:'Changing persona re-tones the whole interview — prompt, voice and offline fallback all switch together.',
             nodes:['PERSONAS','STORE','FN_NEXT_Q','OAI_NEXT_Q','OFFLINE_ENG','TTS'],
             steps:['Storyteller picks a different persona: historian, journalist, grandchild, or researcher','Active persona is saved on the profile via ProfileRepository','next-question.ts swaps in that persona\'s system prompt','gpt-4o-mini is called with the new persona-toned prompt','Offline Engine swaps to that persona\'s regex/prompt pool if running without Azure','TTS switches to the matching neural voice for all following questions'] },
+          { id:7, glyph:'⑦', short:'Agentic loop', title:'The Agentic Loop',
+            color:'oklch(0.55 0.14 305)', soft:'oklch(0.55 0.14 305 / 0.32)', glow:'oklch(0.55 0.14 305 / 0.4)',
+            sub:'One turn, five autonomous steps — listen, reason, extract, illustrate, respond — chained with no human in the loop until the next answer.',
+            nodes:['STT','FN_EXTRACT','OAI_EXTRACT','FN_ILLUSTRATE','OAI_IMAGE','FN_NEXT_Q','OAI_NEXT_Q','TTS','OFFLINE_ENG'],
+            steps:['Listen — STT transcribes continuously as the storyteller speaks, kept verbatim','Extract — the moment an answer finalizes, extract.ts autonomously asks gpt-4o-mini to structure it into a memory, no user action required','Illustrate — in the same turn, illustrate.ts fires off gpt-image-1 to paint a watercolor for the new memory, non-blocking','Reason — independently, next-question.ts asks gpt-4o-mini to weigh the whole conversation so far and decide what to ask next','Respond — TTS speaks the new question aloud and the mic reopens automatically, closing the loop with zero manual input between turns','Recover — if any step times out or errors, the Offline Engine silently completes just that step so the loop never stalls or hard-stops'] },
         ];
 
         state = { activeFlow:null, selectedNode:null, rects:{}, mapW:0, mapH:0 };
