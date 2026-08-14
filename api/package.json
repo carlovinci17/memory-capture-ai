@@ -1,6 +1,6 @@
 {
   "name": "memory-capture-ai-api",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Azure Functions API for Memory Capture AI — Azure AI Foundry orchestration (keys stay server-side).",
   "engines": {
