@@ -55,9 +55,6 @@
   .app {
     grid-template-columns: 1fr;
   }
-  .app--sidebar-collapsed {
-    grid-template-columns: 1fr;
-  }
   .sidebar-tab {
     display: none;
   }
@@ -74,6 +71,7 @@
     transform: translateX(-100%);
     box-shadow: var(--shadow-lg);
     opacity: 1;
+    overflow-y: auto;
     pointer-events: auto;
     transition: transform 0.25s ease;
     background: linear-gradient(180deg, var(--surface), var(--surface-2));
@@ -81,7 +79,13 @@
   }
   .app--sidebar-collapsed .sidebar {
     opacity: 1;
+    overflow-y: auto;
     pointer-events: auto;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sidebar {
+      transition: none;
+    }
   }
   .sidebar--mobile-open {
     transform: translateX(0);
@@ -234,7 +238,6 @@
     font-size: 27px;
   }
   .grid-stats {
-    grid-template-columns: 1fr 1fr;
     gap: 10px;
   }
   .ob-field--row {

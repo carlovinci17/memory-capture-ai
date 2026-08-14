@@ -31,6 +31,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onCloseMobile }: Side
       <aside className={'sidebar' + (mobileOpen ? ' sidebar--mobile-open' : '')}>
         {onCloseMobile && (
           <button
+            type="button"
             className="sidebar__close-btn"
             onClick={onCloseMobile}
             aria-label="Close menu"

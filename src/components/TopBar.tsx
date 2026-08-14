@@ -12,9 +12,10 @@ interface TopBarProps {
   title: string;
   profile: StorytellerProfile;
   onMenuClick?: () => void;
+  mobileNavOpen?: boolean;
 }
 
-export function TopBar({ eyebrow, title, profile, onMenuClick }: TopBarProps) {
+export function TopBar({ eyebrow, title, profile, onMenuClick, mobileNavOpen }: TopBarProps) {
   const { profiles, switchProfile } = useStore();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -60,10 +61,11 @@ export function TopBar({ eyebrow, title, profile, onMenuClick }: TopBarProps) {
             type="button"
             className="topbar__menu-btn"
             onClick={onMenuClick}
-            aria-label="Open menu"
-            title="Open menu"
+            aria-label={mobileNavOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileNavOpen ?? false}
+            title={mobileNavOpen ? 'Close menu' : 'Open menu'}
           >
-            <Icon name="menu" size={20} />
+            <Icon name={mobileNavOpen ? 'close' : 'menu'} size={20} />
           </button>
         )}
         <div>

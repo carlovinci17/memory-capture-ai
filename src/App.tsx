@@ -1,6 +1,6 @@
 // App.tsx — routing + app shell. Guest/local mode; cloud auth lands in M9.
 import { Navigate, Outlet, Route, Routes, useLocation, useParams } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
 import { WatercolorDefs } from './components/Watercolor';
@@ -36,6 +36,7 @@ function AppLayout() {
     () => localStorage.getItem('mcap_sidebar_collapsed') === '1',
   );
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
 
   const toggleSidebar = () => {
     setCollapsed((v) => {
@@ -50,14 +51,32 @@ function AppLayout() {
     setMobileNavOpen(false);
   }, [location.pathname]);
 
-  // Lock body scroll behind the mobile menu overlay while it's open.
+  // Close on Escape, and auto-close if the viewport grows past the mobile breakpoint
+  // (e.g. rotating to landscape) so the state can't get stuck open with nothing on
+  // screen to close it.
   useEffect(() => {
     if (!mobileNavOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileNavOpen(false);
     };
+    const mq = window.matchMedia('(max-width: 860px)');
+    const onMqChange = () => {
+      if (!mq.matches) setMobileNavOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    mq.addEventListener('change', onMqChange);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      mq.removeEventListener('change', onMqChange);
+    };
+  }, [mobileNavOpen]);
+
+  // Keep the page content out of the tab order and off-limits to scroll/interaction
+  // while the mobile off-canvas menu covers it — the dimmed backdrop already blocks
+  // pointer input, but focus/keyboard navigation ignores z-order without this.
+  useEffect(() => {
+    const main = mainRef.current as (HTMLElement & { inert?: boolean }) | null;
+    if (main) main.inert = mobileNavOpen;
   }, [mobileNavOpen]);
 
   if (!activeProfile) return <Navigate to="/onboarding" replace />;
@@ -106,7 +125,7 @@ function AppLayout() {
           <Icon name="chev" size={14} style={{ transform: 'rotate(-90deg)' }} />
         </button>
       )}
-      <main className="main" id="main">
+      <main className="main" id="main" ref={mainRef} aria-hidden={mobileNavOpen || undefined}>
         {inDemoMode && (
           <div className="demo-banner">
             <span className="demo-banner__label">Demo mode active</span>
@@ -125,6 +144,7 @@ function AppLayout() {
           title={title}
           profile={activeProfile}
           onMenuClick={() => setMobileNavOpen((v) => !v)}
+          mobileNavOpen={mobileNavOpen}
         />
         <Outlet context={activeProfile} />
       </main>
