@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './lib/auth/auth';
 import { AuthGate } from './components/AuthGate';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { RouteChangeTracker } from './components/RouteChangeTracker';
 import { initAppInsights } from './lib/monitoring/appInsights';
 
 // Design system — ported verbatim from the approved prototype.
@@ -26,6 +27,7 @@ createRoot(rootEl).render(
   <StrictMode>
     <ErrorBoundary>
       <BrowserRouter>
+        <RouteChangeTracker />
         <AuthProvider>
           <AuthGate />
         </AuthProvider>
