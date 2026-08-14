@@ -3,6 +3,10 @@ import { HttpInterviewEngine } from './httpEngine';
 import { PERSONAS } from '../domain/personas';
 import type { StorytellerProfile } from '../domain/types';
 
+// The session-token round trip is exercised in apiSession.test.ts — stub it here so
+// these tests can assert on a single fetch call per interview request, as before.
+vi.mock('../apiSession', () => ({ withSessionHeader: async (h: Record<string, string> = {}) => h }));
+
 const profile: StorytellerProfile = {
   id: 'p1',
   name: 'Eleanor Marchetti',

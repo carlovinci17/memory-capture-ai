@@ -8,9 +8,12 @@ import { extractSystem } from '../lib/prompts';
 import { verbatimExcerpt } from '../lib/verbatim';
 import { badRequest, json, parseBody, timeoutSignal, tooManyRequests, upstreamError, ValidationError } from '../lib/http';
 import { allowRequest } from '../lib/rateLimit';
+import { requireSessionToken } from '../lib/sessionToken';
 
 async function handler(req: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   if (!allowRequest(req, 40)) return tooManyRequests();
+  const gate = requireSessionToken(req);
+  if (gate !== true) return gate;
   let body;
   try {
     body = await parseBody(req, ExtractRequest);

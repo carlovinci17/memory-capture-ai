@@ -6,9 +6,12 @@
 import { app, type HttpRequest, type HttpResponseInit, type InvocationContext } from '@azure/functions';
 import { json, timeoutSignal, tooManyRequests } from '../lib/http';
 import { allowRequest } from '../lib/rateLimit';
+import { requireSessionToken } from '../lib/sessionToken';
 
 async function handler(req: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   if (!allowRequest(req, 20)) return tooManyRequests();
+  const gate = requireSessionToken(req);
+  if (gate !== true) return gate;
   const key = process.env.AZURE_SPEECH_KEY;
   const region = process.env.AZURE_SPEECH_REGION;
   if (!key || !region) {

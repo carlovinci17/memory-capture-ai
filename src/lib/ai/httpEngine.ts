@@ -11,6 +11,7 @@ import type {
   SummaryContext,
 } from './types';
 import type { ExtractedEntity } from '../domain/types';
+import { withSessionHeader } from '../apiSession';
 
 const TIMEOUT_MS = 12_000;
 const MAX_CALLS_PER_MINUTE = 30;
@@ -46,7 +47,7 @@ export class HttpInterviewEngine implements InterviewEngine {
   private async post(path: string, body: unknown): Promise<Response> {
     return fetch(`${this.base}/${path}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await withSessionHeader({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });

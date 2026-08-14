@@ -18,6 +18,7 @@
     "NOTIFY_FROM_EMAIL": "donotreply@YOUR-ACS-DOMAIN.azurecomm.net",
     "NOTIFY_EMAIL": "your-notification-email@example.com",
     "ADMIN_APPROVE_SECRET": "your-secret-here",
-    "APP_URL": "https://your-app.azurestaticapps.net"
+    "APP_URL": "https://your-app.azurestaticapps.net",
+    "SESSION_TOKEN_SECRET": "your-secret-here"
   }
 }

@@ -6,7 +6,9 @@ import { app, type HttpRequest, type HttpResponseInit, type InvocationContext } 
 import { z } from 'zod';
 import { getImageDeployment, getImageClient, isImageConfigured } from '../lib/imageClient';
 import { isBlobConfigured, uploadDataUrlSizes } from '../lib/blob';
-import { badRequest, json, parseBody, upstreamError, ValidationError } from '../lib/http';
+import { badRequest, json, parseBody, tooManyRequests, upstreamError, ValidationError } from '../lib/http';
+import { allowRequest } from '../lib/rateLimit';
+import { requireSessionToken } from '../lib/sessionToken';
 
 const IllustrateRequest = z.object({
   memoryId: z.string().min(1).max(64),
@@ -34,6 +36,9 @@ function buildPrompt(
 }
 
 async function handler(req: HttpRequest, ctx: InvocationContext): Promise<HttpResponseInit> {
+  if (!allowRequest(req, 10)) return tooManyRequests();
+  const gate = requireSessionToken(req);
+  if (gate !== true) return gate;
   if (!isImageConfigured()) {
     return json(503, { error: 'image_disabled', message: 'Image generation not configured.' });
   }

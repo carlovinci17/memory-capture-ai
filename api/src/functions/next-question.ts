@@ -14,6 +14,7 @@ import { NextQuestionRequest } from '../lib/schemas';
 import { nextQuestionSystem, transcriptMessages } from '../lib/prompts';
 import { badRequest, parseBody, timeoutSignal, tooManyRequests, upstreamError, ValidationError } from '../lib/http';
 import { allowRequest } from '../lib/rateLimit';
+import { requireSessionToken } from '../lib/sessionToken';
 
 // Opt this app into HTTP streaming responses (Functions Node v4).
 app.setup({ enableHttpStream: true });
@@ -23,6 +24,8 @@ async function handler(
   context: InvocationContext,
 ): Promise<HttpResponseInit | HttpResponse> {
   if (!allowRequest(req, 40)) return tooManyRequests();
+  const gate = requireSessionToken(req);
+  if (gate !== true) return gate;
   let body;
   try {
     body = await parseBody(req, NextQuestionRequest);

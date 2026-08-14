@@ -3,6 +3,7 @@
 // /api/speech/token and use it with the SDK. The heavy SDK is lazy-imported
 // only when voice is actually used. Voice is always optional — typing works
 // regardless, and everything degrades silently when Speech isn't configured.
+import { withSessionHeader } from '../apiSession';
 
 interface CachedToken {
   token: string;
@@ -20,7 +21,7 @@ export function _resetTokenCache(): void {
 async function getToken(): Promise<CachedToken | null> {
   if (cache && Date.now() < cache.expires) return cache;
   try {
-    const res = await fetch('/api/speech/token');
+    const res = await fetch('/api/speech/token', { headers: await withSessionHeader() });
     if (!res.ok) return null;
     const data = (await res.json()) as { token?: string; region?: string };
     if (!data.token || !data.region) return null;

@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { isSpeechAvailable, _resetTokenCache } from './speechService';
 
+// The session-token round trip is exercised in apiSession.test.ts — stub it here so
+// these tests can assert on a single fetch call per token check, as before.
+vi.mock('../apiSession', () => ({ withSessionHeader: async (h: Record<string, string> = {}) => h }));
+
 beforeEach(() => _resetTokenCache());
 afterEach(() => vi.restoreAllMocks());
 
