@@ -228,8 +228,9 @@ Phase 1 MVP, built milestone by milestone:
 - [x] **M10** — Accessibility (WCAG 2.1 AA): high-contrast + larger-text modes, ≥44px hit targets, skip link,
       `<main>` landmark, focus rings, reduced-motion; automated `axe-core` tests on key screens.
 - [x] **M11** — Hardening: JSON memory export, consent notice at profile creation, loading + error/retry states.
-- [x] **M9** — Auth: SWA built-in GitHub sign-in, account-scoped data (`401` when anonymous), sign-in gate +
-      sign-out, and per-IP rate limiting on the public AI/speech endpoints. **All 11 milestones complete.**
+- [x] **M9** — Auth: SWA built-in sign-in (originally GitHub, see "Post-launch additions" below for the
+      switch to Google), account-scoped data (`401` when anonymous), sign-in gate + sign-out, and per-IP
+      rate limiting on the public AI/speech endpoints. **All 11 milestones complete.**
 
 The app is fully usable offline today: create/edit/switch/delete storytellers, run interviews in
 both modes, capture verbatim memory cards, and review session summaries — all persisted to
