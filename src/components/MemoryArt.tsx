@@ -1,6 +1,6 @@
 // MemoryArt.tsx — renders a memory's AI-generated watercolour image when
 // available, falling back to the procedural SVG bloom while the image loads
-// or when DALL-E is not configured.
+// or when image generation is not configured.
 import { WatercolorArt } from './Watercolor';
 import type { Memory } from '../lib/domain/types';
 

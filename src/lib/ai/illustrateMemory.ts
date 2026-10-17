@@ -1,5 +1,5 @@
 // illustrateMemory.ts — fire-and-forget wrapper for POST /api/memories/illustrate.
-// Returns both image URLs on success, or null on any failure (DALL-E not configured,
+// Returns both image URLs on success, or null on any failure (image generation not configured,
 // timeout, network error). Never throws.
 import { withSessionHeader } from '../apiSession';
 
