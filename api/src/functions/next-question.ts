@@ -39,8 +39,8 @@ async function handler(
     aiStream = await getClient().chat.completions.create(
       {
         model: getDeployment(),
-        temperature: 0.9,
-        max_tokens: 60,
+        reasoning_effort: 'minimal',
+        max_completion_tokens: 600,
         stream: true,
         messages: [
           { role: 'system', content: nextQuestionSystem(body.profile, body.persona, body.priorMemories, body.openingAngle) },

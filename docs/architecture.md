@@ -141,7 +141,7 @@ flowchart TB
   subgraph AI["🤖 Azure AI Services"]
     direction TB
 
-    subgraph OPENAI_CHAT["Azure OpenAI — gpt-4o-mini\nmemory-capture-chat"]
+    subgraph OPENAI_CHAT["Azure OpenAI — gpt-5-mini\nmemory-capture-chat"]
       OAI_EXTRACT["Memory Extraction\nStructured JSON output\ntitle · era · theme · people · places · years"]
       OAI_NEXT_Q["Question Generation\nContext-aware follow-up\nstreamed token by token"]
       OAI_SUGGEST["Question Suggestions\n3 alternatives for manual mode"]
@@ -184,8 +184,8 @@ flowchart TB
   %% ── KEY DATA FLOWS ───────────────────────────────────────────────────
   subgraph FLOWS["🔄 Key Data Flows"]
     direction LR
-    F1["① Voice Interview Loop\nMic → STT → answer text\n→ extract (gpt-4o-mini)\n→ Memory card created\n→ illustrate (gpt-image-1)\n→ Blob URL → card updated"]
-    F2["② AI Question Flow\nExtraction complete\n→ next-question (gpt-4o-mini, streaming)\n→ question rendered\n→ TTS speaks aloud\n→ mic auto-restarts"]
+    F1["① Voice Interview Loop\nMic → STT → answer text\n→ extract (gpt-5-mini)\n→ Memory card created\n→ illustrate (gpt-image-1)\n→ Blob URL → card updated"]
+    F2["② AI Question Flow\nExtraction complete\n→ next-question (gpt-5-mini, streaming)\n→ question rendered\n→ TTS speaks aloud\n→ mic auto-restarts"]
     F3["③ Profile Persistence\nStoreProvider mutation\n→ /api/profiles (production)\nor localStorage (demo mode)"]
     F4["④ Auth + Approval Flow (production)\nOnboarding ?access=1 → /.auth/login/google\n→ Google OAuth → x-ms-client-principal\n→ first request creates 'pending' user\n→ ACS emails admin + user\n→ admin clicks approve/reject link\n→ ACS emails outcome → user signs in"]
   end
@@ -226,6 +226,6 @@ flowchart TB
 | Database | Azure Cosmos DB | `profiles` (memories, NoSQL, partitioned by account) + `users` (approval status) |
 | Storage | Azure Blob Storage | Profile photos + AI-generated illustrations |
 | Email | Azure Communication Services | Sign-up approval emails (admin notify, pending, approved/rejected) |
-| AI — Chat | Azure OpenAI gpt-4o-mini | Question generation, memory extraction, summaries |
+| AI — Chat | Azure OpenAI gpt-5-mini | Question generation, memory extraction, summaries |
 | AI — Image | Azure OpenAI gpt-image-1 | Watercolor illustration per captured memory |
 | AI — Speech | Azure AI Speech (australiaeast) | STT from microphone + TTS persona voices |

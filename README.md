@@ -9,7 +9,7 @@ people, places, and dates they mention extracted automatically.
 - **Front end:** Vite + React 18 + TypeScript (SPA).
 - **Routing:** `react-router-dom`.
 - **API:** Azure Functions (TypeScript, v4 programming model), managed by Azure Static Web Apps.
-- **AI (text):** Azure AI Foundry (`gpt-4o-mini`) — next-question, follow-up suggestions, structured extraction, summary.
+- **AI (text):** Azure AI Foundry (`gpt-5-mini`) — next-question, follow-up suggestions, structured extraction, summary.
 - **AI (image):** Azure OpenAI `gpt-image-1` — a square watercolor illustration generated per captured memory,
   stored in Blob; degrades silently to a procedural SVG watercolor when not configured.
 - **Voice:** Azure AI Speech (STT + optional TTS) via short-lived server-minted tokens.
@@ -68,16 +68,16 @@ az cognitiveservices account create \
 # Deploy the cheapest capable chat model
 az cognitiveservices account deployment create \
   -n memory-capture-aoai -g memory-capture-rg \
-  --deployment-name gpt-4o-mini \
-  --model-name gpt-4o-mini --model-version "2024-07-18" --model-format OpenAI \
-  --sku-capacity 10 --sku-name Standard
+  --deployment-name gpt-5-mini \
+  --model-name gpt-5-mini --model-version "2025-08-07" --model-format OpenAI \
+  --sku-capacity 10 --sku-name GlobalStandard
 
 # Read the values you need
 az cognitiveservices account show -n memory-capture-aoai -g memory-capture-rg --query properties.endpoint -o tsv
 az cognitiveservices account keys list -n memory-capture-aoai -g memory-capture-rg --query key1 -o tsv
 ```
 
-(Or do the same in the Azure AI Foundry portal: create a project → deploy `gpt-4o-mini` → copy the endpoint + key.)
+(Or do the same in the Azure AI Foundry portal: create a project → deploy `gpt-5-mini` → copy the endpoint + key.)
 
 ### 2. Run locally with AI
 

@@ -1,5 +1,5 @@
 // extract.ts — POST /api/interview/extract
-// Structured memory extraction (Scope §7.3). Temperature 0 for determinism.
+// Structured memory extraction (Scope §7.3). Minimal reasoning keeps it fast.
 // The model's excerpt is re-validated server-side to be verbatim.
 import { app, type HttpRequest, type HttpResponseInit, type InvocationContext } from '@azure/functions';
 import { getClient, getDeployment } from '../lib/client';
@@ -24,8 +24,8 @@ async function handler(req: HttpRequest, context: InvocationContext): Promise<Ht
     const completion = await getClient().chat.completions.create(
       {
         model: getDeployment(),
-        temperature: 0,
-        max_tokens: 500,
+        reasoning_effort: 'minimal',
+        max_completion_tokens: 1500,
         response_format: { type: 'json_schema', json_schema: EXTRACTION_JSON_SCHEMA },
         messages: [
           { role: 'system', content: extractSystem() },

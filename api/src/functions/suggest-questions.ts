@@ -26,8 +26,8 @@ async function handler(req: HttpRequest, context: InvocationContext): Promise<Ht
     const completion = await getClient().chat.completions.create(
       {
         model: getDeployment(),
-        temperature: 0.7,
-        max_tokens: 150,
+        reasoning_effort: 'minimal',
+        max_completion_tokens: 800,
         response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: suggestQuestionsSystem(body.profile, body.persona, body.count) },

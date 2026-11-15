@@ -11,7 +11,7 @@ export function isConfigured(): boolean {
 }
 
 export function getDeployment(): string {
-  return process.env.AZURE_OPENAI_DEPLOYMENT || 'gpt-4o-mini';
+  return process.env.AZURE_OPENAI_DEPLOYMENT || 'gpt-5-mini';
 }
 
 export function getClient(): AzureOpenAI {
@@ -24,7 +24,7 @@ export function getClient(): AzureOpenAI {
   cached = new AzureOpenAI({
     endpoint,
     apiKey,
-    apiVersion: process.env.AZURE_OPENAI_API_VERSION || '2024-08-01-preview',
+    apiVersion: process.env.AZURE_OPENAI_API_VERSION || '2025-04-01-preview',
     deployment: getDeployment(),
   });
   return cached;
